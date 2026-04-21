@@ -1,0 +1,554 @@
+/* Picaro AI — polish tokens, motion, a11y */
+
+:root {
+  /* 4px base spacing — use multiples only: 4, 8, 12, 16, 20, 24, 32 */
+  --picaro-space-1: 4px;
+  --picaro-space-2: 8px;
+  --picaro-space-3: 12px;
+  --picaro-space-4: 16px;
+  --picaro-space-5: 20px;
+  --picaro-space-6: 24px;
+  --picaro-space-8: 32px;
+
+  --picaro-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --picaro-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --picaro-dur-fast: 120ms;
+  --picaro-dur-med: 180ms;
+  --picaro-accent: #12b76a;
+  --picaro-accent-ring: rgba(18, 183, 106, 0.35);
+  --picaro-blue: #3b82f6;
+  --picaro-panel: #0b0b0d;
+  /* Elevation: hairline top + soft drop (Linear/Figma-style dark chrome) */
+  --picaro-elev-0: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --picaro-elev-1: var(--picaro-elev-0), 0 8px 24px rgba(0, 0, 0, 0.45);
+  --picaro-elev-2: var(--picaro-elev-0), 0 16px 48px rgba(0, 0, 0, 0.55);
+  --picaro-inset-well: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* Typography tokens */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+@keyframes picaro-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes picaro-shimmer {
+  0% {
+    transform: translateX(-40%);
+  }
+  100% {
+    transform: translateX(140%);
+  }
+}
+
+@keyframes picaro-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.picaro-focus:focus-visible {
+  outline: 2px solid #6ea8ff;
+  outline-offset: 2px;
+}
+
+.picaro-tool-hit {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color var(--picaro-dur-fast) var(--picaro-ease-out),
+    color var(--picaro-dur-fast) var(--picaro-ease-out),
+    box-shadow var(--picaro-dur-fast) var(--picaro-ease-out),
+    transform 60ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+
+.picaro-tool-hit:active {
+  transform: scale(0.98);
+}
+
+.picaro-tool-hit--active {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  color: #fff;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(59, 130, 246, 0.18),
+    0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.picaro-tool-hit--inactive {
+  background-color: transparent;
+  color: #737373;
+}
+
+.picaro-tool-hit--inactive:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #a3a3a3;
+}
+
+.picaro-canvas-stage {
+  will-change: transform;
+}
+
+.picaro-canvas-stage--smooth {
+  transition: transform 160ms var(--picaro-ease-out);
+}
+
+.picaro-thumb-card {
+  border-radius: 12px;
+  padding: 6px;
+  transition:
+    transform var(--picaro-dur-med) var(--picaro-ease-out),
+    box-shadow var(--picaro-dur-med) var(--picaro-ease-out);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.picaro-thumb-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.picaro-thumb-card--selected {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 0 0 3px rgba(18, 183, 106, 0.14);
+}
+
+.picaro-process-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  font-size: 12px;
+  line-height: 16px;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: picaro-step-in 420ms var(--picaro-ease-out) forwards;
+  animation-delay: calc(var(--step-i, 0) * 100ms);
+}
+
+.picaro-canvas-shimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  overflow: hidden;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.65), rgba(10, 10, 10, 0.75));
+}
+
+.picaro-canvas-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.09) 50%,
+    transparent 60%
+  );
+  animation: picaro-shimmer 1.25s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.picaro-toast {
+  animation: picaro-toast-in 180ms var(--picaro-ease-out) both;
+}
+
+.picaro-panel-right {
+  animation: picaro-step-in 220ms var(--picaro-ease-out) both;
+}
+
+.picaro-swatch-hit {
+  transition: filter var(--picaro-dur-fast) var(--picaro-ease-out);
+}
+
+.picaro-swatch-hit:hover {
+  filter: brightness(1.08);
+}
+
+.picaro-swatch-hit:active {
+  transform: scale(0.98);
+}
+
+/* ─── Procreate / Stylus-style vertical pill sliders ─────────────────────── */
+
+/* Track shell */
+.picaro-vslider {
+  touch-action: none;
+  width: 28px;
+  height: 116px;
+  border-radius: 999px;
+  position: relative;
+  transition: filter 150ms ease;
+}
+
+.picaro-vslider:hover {
+  filter: brightness(1.08);
+}
+
+/* Active-drag: soft glow ring */
+.picaro-vslider--dragging {
+  filter: brightness(1.0);
+}
+.picaro-vslider--dragging::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.14), 0 0 12px rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+/* Groove: deep inset well */
+.picaro-vslider__groove {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #0d0d0d;
+  box-shadow:
+    inset 0 3px 6px rgba(0, 0, 0, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+
+/* Fill base (shared) */
+.picaro-vslider__fill {
+  position: absolute;
+  inset-inline: 4px;
+  bottom: 0;
+  border-radius: 999px;
+  transition: height 80ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+/* Size slider fill: luminous white → grey gradient */
+.picaro-vslider__fill--size {
+  background: linear-gradient(
+    to top,
+    #3a3a3a 0%,
+    #7a7a7a 40%,
+    #c8c8c8 80%,
+    #ffffff 100%
+  );
+  box-shadow: 0 -2px 8px rgba(255, 255, 255, 0.18);
+}
+
+/* Opacity slider: pure white (opacity set inline) */
+.picaro-vslider__fill--opacity {
+  background: #ffffff;
+  transition: height 80ms cubic-bezier(0.16, 1, 0.3, 1), opacity 80ms ease;
+}
+
+/* Checkerboard backdrop for opacity slider (subtle transparency illusion) */
+.picaro-vslider__checker {
+  position: absolute;
+  inset-inline: 4px;
+  inset-block: 0;
+  border-radius: 999px;
+  pointer-events: none;
+  background-image:
+    repeating-conic-gradient(
+      rgba(255, 255, 255, 0.06) 0% 25%,
+      transparent 0% 50%
+    );
+  background-size: 6px 6px;
+}
+
+/* Thumb: chunky pill with grip notch */
+.picaro-vslider__thumb {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #484848 0%, #2a2a2a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  transition: bottom 80ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Single grip notch line inside the thumb */
+.picaro-vslider__thumb-grip {
+  width: 10px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* ─── Value badge (replaces old rounded-lg box) ─────────────────────────── */
+.picaro-slider-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% - 4px);
+  max-width: 3.5rem;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.picaro-slider-badge__value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1;
+}
+
+.picaro-slider-badge__unit {
+  font-weight: 500;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-left: 1px;
+}
+
+/* ─── Slider label ──────────────────────────────────────────────────────── */
+.picaro-slider-label {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.3);
+  user-select: none;
+}
+
+/* Zoom HUD — finished “instrument” read, not debug text */
+.picaro-zoom-hud {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(12, 12, 12, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--picaro-elev-0), 0 4px 16px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  user-select: none;
+}
+
+.picaro-zoom-hud__pct {
+  color: rgba(255, 255, 255, 0.88);
+  min-width: 2.75rem;
+  text-align: center;
+}
+
+.picaro-zoom-reset {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(20, 20, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition:
+    background-color var(--picaro-dur-fast) var(--picaro-ease-out),
+    border-color var(--picaro-dur-fast) var(--picaro-ease-out),
+    transform 60ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+
+.picaro-zoom-reset:hover {
+  background: rgba(32, 32, 32, 0.95);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.picaro-zoom-reset:active {
+  transform: scale(0.97);
+}
+
+/* Prompt / form wells — never pure #fff fill on dark SaaS */
+.picaro-input-well {
+  background: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--picaro-inset-well);
+  transition:
+    border-color var(--picaro-dur-fast) var(--picaro-ease-out),
+    box-shadow var(--picaro-dur-fast) var(--picaro-ease-out);
+}
+
+.picaro-input-well:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.picaro-input-well:focus {
+  outline: none;
+  border-color: rgba(18, 183, 106, 0.45);
+  box-shadow: var(--picaro-inset-well), 0 0 0 2px var(--picaro-accent-ring);
+}
+
+.picaro-input-well:focus-visible {
+  outline: 2px solid #6ea8ff;
+  outline-offset: 2px;
+}
+
+/* Unified secondary actions (Save seed / Save strip same chrome; strip = accent outline only) */
+.picaro-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  color: #e5e5e5;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--picaro-elev-0);
+  cursor: pointer;
+  transition:
+    background-color var(--picaro-dur-fast) var(--picaro-ease-out),
+    border-color var(--picaro-dur-fast) var(--picaro-ease-out),
+    transform 60ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+
+.picaro-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.picaro-btn-ghost:active {
+  transform: scale(0.98);
+}
+
+.picaro-btn-ghost--accent {
+  border-color: rgba(18, 183, 106, 0.35);
+  background: rgba(18, 183, 106, 0.08);
+  color: #c8f0dc;
+}
+
+.picaro-btn-ghost--accent:hover {
+  border-color: rgba(18, 183, 106, 0.48);
+  background: rgba(18, 183, 106, 0.12);
+}
+
+/* Filmstrip strip — slight lift from canvas */
+.picaro-filmstrip {
+  box-shadow: var(--picaro-elev-0), 0 -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.picaro-topbar-shell {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent),
+    #0a0a0b;
+}
+
+.picaro-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(224, 224, 228, 0.86);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.picaro-topbar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.42);
+  transition:
+    color var(--picaro-dur-fast) var(--picaro-ease-out),
+    background-color var(--picaro-dur-fast) var(--picaro-ease-out);
+}
+
+.picaro-topbar-icon:hover {
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.picaro-export-btn {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #f8f8f8;
+  color: #050505;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  transition:
+    transform 60ms cubic-bezier(0.33, 0, 0.67, 1),
+    box-shadow var(--picaro-dur-fast) var(--picaro-ease-out);
+  box-shadow: 0 10px 24px rgba(255, 255, 255, 0.08);
+}
+
+.picaro-export-btn:active {
+  transform: scale(0.98);
+}
+
+.picaro-panel-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(7, 7, 9, 0.88);
+  color: rgba(224, 224, 228, 0.86);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.picaro-panel-tag--blue {
+  border-color: rgba(59, 130, 246, 0.28);
+  background: rgba(59, 130, 246, 0.14);
+  color: #a9c8ff;
+}
