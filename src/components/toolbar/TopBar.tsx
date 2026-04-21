@@ -8,14 +8,46 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { ExportModal } from '../export/ExportModal';
+import { AuthModal } from '../auth/AuthModal';
+import { useAuth } from '../../lib/useAuth';
 
 interface TopBarActionsProps {
   onExport: () => void;
+  user: any;
+  signOut: () => void;
+  onOpenAuth: () => void;
 }
 
-const TopBarActions: React.FC<TopBarActionsProps> = ({ onExport }) => {
+const TopBarActions: React.FC<TopBarActionsProps> = ({ onExport, user, signOut, onOpenAuth }) => {
   return (
     <div className="flex items-center gap-2">
+      {user ? (
+        <div className="flex items-center gap-2 mr-2">
+          <span className="font-mono text-[10px] text-white/30 uppercase tracking-wider hidden sm:block">
+            {user.email?.split('@')[0]}
+          </span>
+          <button
+            type="button"
+            onClick={signOut}
+            className="px-3 h-7 rounded-lg font-mono text-[10px] uppercase tracking-wider text-white/40 border border-white/[0.08] hover:text-white/60 hover:border-white/15 transition-all"
+          >
+            Sign out
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={onOpenAuth}
+          className="px-3 h-7 rounded-lg font-mono text-[10px] uppercase tracking-wider font-bold transition-all mr-2"
+          style={{
+            background:
+              'linear-gradient(135deg, #12b76a 0%, #0ea5e9 100%)',
+            color: '#fff',
+          }}
+        >
+          Sign In
+        </button>
+      )}
       <button
         type="button"
         title="Share"
@@ -49,6 +81,8 @@ export const TopBar: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const { canUndo, canRedo, triggerUndo, triggerRedo } = useStore();
+  const { user, signOut } = useAuth();
+  const [authOpen, setAuthOpen] = useState(false);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === 'Escape') {
@@ -105,11 +139,21 @@ export const TopBar: React.FC = () => {
         </div>
 
         <div className="flex justify-end">
-          <TopBarActions onExport={() => setExportOpen(true)} />
+          <TopBarActions 
+            onExport={() => setExportOpen(true)} 
+            user={user}
+            signOut={signOut}
+            onOpenAuth={() => setAuthOpen(true)}
+          />
         </div>
       </div>
 
       <ExportModal isOpen={exportOpen} onClose={() => setExportOpen(false)} />
+      <AuthModal
+        isOpen={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onSuccess={() => setAuthOpen(false)}
+      />
     </div>
   );
 };
