@@ -49,26 +49,28 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
     setPreviewURL(null);
 
     // ── Step 1: Resolve all URLs to data URLs BEFORE touching the canvas ──
-    // canvas.drawImage() taints the canvas if the source is a cross-origin URL
-    // (even if it visually loaded). Converting to a data URL first avoids this.
     const resolvedURLs: (string | null)[] = await Promise.all(
       pagesToRender.map(async (page) => {
         if (!page.aiResult) return null;
-        // Already a data URL — safe for canvas
         if (page.aiResult.startsWith('data:')) return page.aiResult;
-        // Legacy remote URL — fetch and convert to data URL
         try {
           const response = await fetch(page.aiResult);
           if (!response.ok) return null;
-          const blob = await response.blob();
+          const rawBlob = await response.blob();
+          
+          // Force correct MIME type
+          const mimeType = (rawBlob.type && rawBlob.type !== 'application/octet-stream' && rawBlob.type !== 'text/plain') 
+            ? rawBlob.type 
+            : 'image/png';
+          const imageBlob = new Blob([rawBlob], { type: mimeType });
+
           return await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result as string);
             reader.onerror = reject;
-            reader.readAsDataURL(blob);
+            reader.readAsDataURL(imageBlob);
           });
         } catch {
-          console.warn('Could not convert panel to data URL (may be expired):', page.aiResult);
           return null;
         }
       })
@@ -94,13 +96,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         const y = PADDING;
         const dataURL = resolvedURLs[i];
 
-        // Panel background
+        // Panel background — beginPath() prevents path accumulation across iterations
+        ctx.beginPath();
         ctx.fillStyle = '#1a1a1e';
         ctx.roundRect(x, y, PANEL_SIZE, PANEL_SIZE, 8);
         ctx.fill();
 
         if (dataURL) {
-          // Draw from data URL — guaranteed same-origin, no CORS taint
           await new Promise<void>((resolve) => {
             const img = new Image();
             img.onload = () => {
@@ -112,13 +114,23 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
               ctx.restore();
               resolve();
             };
-            img.onerror = () => resolve();
+            img.onerror = () => {
+              ctx.beginPath();
+              ctx.fillStyle = 'rgba(255,50,50,0.15)';
+              ctx.roundRect(x, y, PANEL_SIZE, PANEL_SIZE, 8);
+              ctx.fill();
+              ctx.fillStyle = 'rgba(255,100,100,0.6)';
+              ctx.font = 'bold 11px monospace';
+              ctx.textAlign = 'center';
+              ctx.fillText('Image expired', x + PANEL_SIZE / 2, y + PANEL_SIZE / 2);
+              ctx.textAlign = 'left';
+              resolve();
+            };
             img.src = dataURL;
           });
         } else {
-          // Failed to load — show "Expired" indicator
-          ctx.fillStyle = 'rgba(255,50,50,0.15)';
           ctx.beginPath();
+          ctx.fillStyle = 'rgba(255,50,50,0.15)';
           ctx.roundRect(x, y, PANEL_SIZE, PANEL_SIZE, 8);
           ctx.fill();
           ctx.fillStyle = 'rgba(255,100,100,0.6)';
@@ -129,9 +141,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         }
 
         // Panel border
+        ctx.beginPath();
         ctx.strokeStyle = 'rgba(255,255,255,0.08)';
         ctx.lineWidth = 1;
-        ctx.beginPath();
         ctx.roundRect(x, y, PANEL_SIZE, PANEL_SIZE, 8);
         ctx.stroke();
 
@@ -153,6 +165,42 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
     }
   }, [exportPages, selectedPanels, PANEL_SIZE, GAP, PADDING, LABEL_HEIGHT]);
 
+  // Helper: load a remote URL into a canvas and export as a clean PNG blob
+  const urlToCanvasBlob = useCallback(async (url: string): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        const ctx = c.getContext('2d')!;
+        ctx.drawImage(img, 0, 0);
+        c.toBlob((blob) => resolve(blob), 'image/png');
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  }, []);
+
+  // Helper: load a remote URL into a canvas and export as a data URL
+  const urlToCanvasDataURL = useCallback(async (url: string): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        const ctx = c.getContext('2d')!;
+        ctx.drawImage(img, 0, 0);
+        resolve(c.toDataURL('image/png'));
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  }, []);
+
   // ZIP download helper (shared)
   const handleDownloadZip = useCallback(async () => {
     const pagesToExport = exportPages.filter((_, i) => selectedPanels.has(i));
@@ -167,9 +215,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         const page = pagesToExport[i];
         if (!page.aiResult) continue;
         try {
-          const response = await fetch(page.aiResult);
-          const blob = await response.blob();
-          folder.file(`panel-${String(i + 1).padStart(2, '0')}.png`, blob);
+          const blob = await urlToCanvasBlob(page.aiResult);
+          if (blob) {
+            folder.file(`panel-${String(i + 1).padStart(2, '0')}.png`, blob);
+          }
         } catch {
           console.error(`Failed to fetch panel ${i + 1}`);
         }
@@ -183,13 +232,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } finally {
       setIsDownloading(false);
     }
-  }, [exportPages, selectedPanels]);
+  }, [exportPages, selectedPanels, urlToCanvasBlob]);
 
-  // FIX 2: Smart download — PNG if 1 selected, ZIP if multiple
+  // Smart download — PNG if 1 selected, ZIP if multiple
   const handleSmartDownload = async () => {
     const pagesToExport = exportPages.filter((_, i) => selectedPanels.has(i));
     if (pagesToExport.length === 0) return;
@@ -199,16 +248,18 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
       if (!page.aiResult) return;
       setIsDownloading(true);
       try {
-        const response = await fetch(page.aiResult);
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
+        // Convert through canvas to guarantee a real image/png data URL
+        const dataURL = await urlToCanvasDataURL(page.aiResult);
+        if (!dataURL) {
+          console.error('Download failed: could not convert image');
+          return;
+        }
         const a = document.createElement('a');
-        a.href = url;
+        a.href = dataURL;
         a.download = 'picaro-panel-01.png';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
       } catch {
         console.error('Download failed');
       } finally {

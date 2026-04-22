@@ -4,7 +4,6 @@ import {
   Redo2,
   Pencil,
   Share2,
-  Download,
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { ExportModal } from '../export/ExportModal';
@@ -54,15 +53,6 @@ const TopBarActions: React.FC<TopBarActionsProps> = ({ onExport, user, signOut, 
         className="picaro-topbar-icon"
       >
         <Share2 size={16} strokeWidth={1.8} />
-      </button>
-
-      <button
-        type="button"
-        title="Export"
-        onClick={onExport}
-        className="picaro-topbar-icon"
-      >
-        <Download size={16} strokeWidth={1.8} />
       </button>
 
       <button

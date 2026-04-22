@@ -1,12 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { Plus, Trash2, Upload, Check, X } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { useDatabase } from '../../lib/useDatabase';
 
 interface CharacterSeedPanelProps {
   currentGeneratedImageURL: string | null;
 }
 
-// Convert image URL to base64
 async function imageURLToBase64(url: string): Promise<string> {
   try {
     const response = await fetch(url);
@@ -22,7 +22,6 @@ async function imageURLToBase64(url: string): Promise<string> {
   }
 }
 
-// Convert uploaded file to base64
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -32,9 +31,9 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-export const CharacterSeedPanel: React.FC<
-  CharacterSeedPanelProps
-> = ({ currentGeneratedImageURL }) => {
+export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
+  currentGeneratedImageURL,
+}) => {
   const {
     characterSeeds,
     activeCharacterSeedId,
@@ -43,6 +42,7 @@ export const CharacterSeedPanel: React.FC<
     removeCharacterSeed,
     setActiveCharacterSeed,
   } = useStore();
+  const { saveSeedToDatabase, deleteSeedFromDatabase } = useDatabase();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [namingState, setNamingState] = useState<{
@@ -55,15 +55,12 @@ export const CharacterSeedPanel: React.FC<
 
   const atLimit = characterSeeds.length >= maxSeeds;
 
-  // ── Save current generated image as seed ──────────
   const handleSaveGenerated = async () => {
     if (!currentGeneratedImageURL) return;
     setSaving(true);
     setError(null);
     try {
-      const base64 = await imageURLToBase64(
-        currentGeneratedImageURL
-      );
+      const base64 = await imageURLToBase64(currentGeneratedImageURL);
       setNamingState({
         imageBase64: base64,
         defaultName: 'Character',
@@ -76,20 +73,17 @@ export const CharacterSeedPanel: React.FC<
     }
   };
 
-  // ── Handle file upload ────────────────────────────
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Reset input so same file can be re-uploaded
     e.target.value = '';
 
     if (!file.type.startsWith('image/')) {
       setError('Please upload an image file.');
       return;
     }
-    // 5MB limit
     if (file.size > 5 * 1024 * 1024) {
       setError('Image must be under 5MB.');
       return;
@@ -111,20 +105,45 @@ export const CharacterSeedPanel: React.FC<
     }
   };
 
-  // ── Confirm name and save seed ────────────────────
-  const handleConfirmSave = () => {
+  const handleConfirmSave = async () => {
     if (!namingState) return;
     const name = nameInput.trim() || namingState.defaultName;
-    const result = addCharacterSeed(
-      name,
-      namingState.imageBase64
-    );
-    if (result.success) {
+    setSaving(true);
+    setError(null);
+
+    try {
+      const remoteSeedId = await saveSeedToDatabase(name, namingState.imageBase64);
+
+      if (remoteSeedId) {
+        useStore.setState((state) => ({
+          ...state,
+          characterSeeds: [
+            {
+              id: remoteSeedId,
+              name,
+              imageBase64: namingState.imageBase64,
+              thumbnail: namingState.imageBase64,
+              createdAt: Date.now(),
+            },
+            ...state.characterSeeds.filter((seed) => seed.id !== remoteSeedId),
+          ],
+          activeCharacterSeedId: remoteSeedId,
+        }));
+      } else {
+        const result = addCharacterSeed(name, namingState.imageBase64);
+        if (!result.success) {
+          setError(result.error ?? 'Failed to save seed.');
+          setSaving(false);
+          return;
+        }
+      }
+
       setNamingState(null);
       setNameInput('');
-      setError(null);
-    } else {
-      setError(result.error ?? 'Failed to save seed.');
+    } catch {
+      setError('Failed to save seed. Try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -134,10 +153,13 @@ export const CharacterSeedPanel: React.FC<
     setError(null);
   };
 
-  // ── Render ────────────────────────────────────────
+  const handleDeleteSeed = async (seedId: string) => {
+    await deleteSeedFromDatabase(seedId);
+    removeCharacterSeed(seedId);
+  };
+
   return (
     <div className="flex flex-col gap-2">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-500">
           Character Seeds
@@ -147,14 +169,12 @@ export const CharacterSeedPanel: React.FC<
         </span>
       </div>
 
-      {/* Error message */}
       {error && (
         <div className="text-[11px] text-red-400 bg-red-400/10 rounded-md px-2 py-1.5">
           {error}
         </div>
       )}
 
-      {/* Naming dialog */}
       {namingState && (
         <div className="flex flex-col gap-2 p-2 rounded-lg border border-white/10 bg-white/[0.03]">
           <div className="flex items-center gap-2">
@@ -169,7 +189,9 @@ export const CharacterSeedPanel: React.FC<
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleConfirmSave();
+                if (e.key === 'Enter') {
+                  void handleConfirmSave();
+                }
                 if (e.key === 'Escape') handleCancelNaming();
               }}
               placeholder={namingState.defaultName}
@@ -179,7 +201,7 @@ export const CharacterSeedPanel: React.FC<
           <div className="flex gap-1.5">
             <button
               type="button"
-              onClick={handleConfirmSave}
+              onClick={() => void handleConfirmSave()}
               className="flex-1 flex items-center justify-center gap-1 h-7 rounded-md bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[11px] font-medium hover:bg-emerald-500/30 transition-colors"
             >
               <Check size={11} />
@@ -196,9 +218,7 @@ export const CharacterSeedPanel: React.FC<
         </div>
       )}
 
-      {/* Seed grid */}
       <div className="grid grid-cols-3 gap-1.5">
-        {/* None option */}
         <button
           type="button"
           onClick={() => setActiveCharacterSeed(null)}
@@ -208,11 +228,10 @@ export const CharacterSeedPanel: React.FC<
               : 'border-white/10 bg-white/[0.02] text-neutral-500 hover:bg-white/[0.04]'
           }`}
         >
-          <span className="text-lg leading-none mb-0.5">✦</span>
+          <span className="text-lg leading-none mb-0.5">*</span>
           <span>None</span>
         </button>
 
-        {/* Saved seeds */}
         {characterSeeds.map((seed) => (
           <div
             key={seed.id}
@@ -221,33 +240,28 @@ export const CharacterSeedPanel: React.FC<
                 ? 'border-emerald-500/70 ring-1 ring-emerald-500/40'
                 : 'border-white/10 hover:border-white/20'
             }`}
-            onClick={() => setActiveCharacterSeed(
-              activeCharacterSeedId === seed.id ? null : seed.id
-            )}
+            onClick={() => setActiveCharacterSeed(activeCharacterSeedId === seed.id ? null : seed.id)}
           >
             <img
               src={seed.thumbnail}
               alt={seed.name}
               className="w-full h-full object-cover"
             />
-            {/* Name overlay */}
             <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
               <p className="text-[9px] text-white/80 truncate leading-tight">
                 {seed.name}
               </p>
             </div>
-            {/* Active checkmark */}
             {activeCharacterSeedId === seed.id && (
               <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
                 <Check size={9} className="text-white" />
               </div>
             )}
-            {/* Delete button */}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                removeCharacterSeed(seed.id);
+                void handleDeleteSeed(seed.id);
               }}
               className="absolute top-1 left-1 w-5 h-5 rounded-md bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/60"
             >
@@ -257,14 +271,10 @@ export const CharacterSeedPanel: React.FC<
         ))}
       </div>
 
-      {/* Action buttons */}
       <div className="flex gap-1.5">
-        {/* Save current generation */}
         <button
           type="button"
-          disabled={
-            !currentGeneratedImageURL || saving || atLimit
-          }
+          disabled={!currentGeneratedImageURL || saving || atLimit}
           onClick={handleSaveGenerated}
           className="flex-1 flex items-center justify-center gap-1.5 h-7 rounded-md border border-white/10 bg-white/[0.03] text-[11px] text-white/50 hover:bg-white/[0.06] hover:text-white/70 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
         >
@@ -272,7 +282,6 @@ export const CharacterSeedPanel: React.FC<
           {saving ? 'Saving...' : 'Save current'}
         </button>
 
-        {/* Upload image */}
         <button
           type="button"
           disabled={atLimit}
@@ -290,7 +299,6 @@ export const CharacterSeedPanel: React.FC<
         </p>
       )}
 
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"

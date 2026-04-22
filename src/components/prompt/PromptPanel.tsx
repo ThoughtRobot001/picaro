@@ -105,18 +105,8 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
     userPrompt: string,
     mode: 'generate' | 'refine' = 'generate'
   ) => {
-    const apiKey = import.meta.env.VITE_REPLICATE_API_KEY;
-    if (!apiKey) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `${Date.now()}-err`,
-          role: 'ai' as const,
-          text: 'API key not configured. Add VITE_REPLICATE_API_KEY to .env.local',
-        },
-      ]);
-      return;
-    }
+    // Auth is handled by Edge Function
+    // No API key needed in frontend
 
     setIsGenerating(true);
     setProcStep(1);
@@ -164,39 +154,20 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
         canvasURL,
         activeSeed.imageBase64,
         selectedStyle,
-        userPrompt,
-        apiKey
+        userPrompt
       );
     } else {
-      result = await generateFromSketch(promptOptions, apiKey);
+      result = await generateFromSketch(promptOptions);
     }
 
     setIsGenerating(false);
     setProcStep(0);
 
     if (result.success && result.imageURL) {
-      // Convert the remote Replicate URL to a base64 data URL immediately.
-      // This avoids CORS issues when drawing to canvas (strip export) and
-      // prevents 24-hour URL expiry from breaking exports later.
-      let finalURL = result.imageURL;
-      try {
-        const response = await fetch(result.imageURL);
-        const blob = await response.blob();
-        finalURL = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      } catch {
-        // If conversion fails (e.g. network error), fall back to the remote URL
-        finalURL = result.imageURL;
-      }
-
-      onGenerated(finalURL);
-      setLastGeneratedURL(finalURL);
+      onGenerated(result.imageURL);
+      setLastGeneratedURL(result.imageURL);
       const { currentPageId, updatePageResult } = useStore.getState();
-      updatePageResult(currentPageId, finalURL);
+      updatePageResult(currentPageId, result.imageURL);
       setMessages((prev) => [
         ...prev,
         {
@@ -211,7 +182,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
         {
           id: `${Date.now()}-err`,
           role: 'ai' as const,
-          text: `Generation failed: ${result.error ?? 'Unknown error'}`,
+          text: result.error ?? 'Unknown error',
         },
       ]);
     }

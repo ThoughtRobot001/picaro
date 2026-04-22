@@ -235,20 +235,25 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
   }, [setCanUndo, setCanRedo, exportCanvas]);
 
   // Undo/redo triggered by store counter
+  const lastUndoRef = useRef(undoCounter);
   useEffect(() => {
-    if (undoCounter > 0 && historyStep.current > 0) {
-      historyStep.current -= 1;
-      restoreHistoryState();
+    if (undoCounter > lastUndoRef.current) {
+      lastUndoRef.current = undoCounter;
+      if (historyStep.current > 0) {
+        historyStep.current -= 1;
+        restoreHistoryState();
+      }
     }
   }, [undoCounter, restoreHistoryState]);
 
+  const lastRedoRef = useRef(redoCounter);
   useEffect(() => {
-    if (
-      redoCounter > 0 &&
-      historyStep.current < history.current.length - 1
-    ) {
-      historyStep.current += 1;
-      restoreHistoryState();
+    if (redoCounter > lastRedoRef.current) {
+      lastRedoRef.current = redoCounter;
+      if (historyStep.current < history.current.length - 1) {
+        historyStep.current += 1;
+        restoreHistoryState();
+      }
     }
   }, [redoCounter, restoreHistoryState]);
 
@@ -812,7 +817,8 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     if (
       cursorRef.current &&
       activeTool !== 'none' &&
-      containerRef.current
+      containerRef.current &&
+      canvasRef.current
     ) {
       const rect = containerRef.current.getBoundingClientRect();
       const parentScale = rect.width / containerRef.current.offsetWidth;
@@ -820,6 +826,13 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
       const y = (e.clientY - rect.top) / parentScale;
       cursorRef.current.style.transform =
         `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+
+      // Dynamically update cursor size to perfectly match the canvas stroke visual size
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      const canvasLineWidth = activeTool === 'eraser' ? brushSize * 4 : brushSize;
+      const visualCursorSize = canvasLineWidth * (canvasRect.width / CANVAS_RESOLUTION);
+      cursorRef.current.style.width = `${visualCursorSize}px`;
+      cursorRef.current.style.height = `${visualCursorSize}px`;
     }
 
     if (isDrawing.current && activeTool === 'hand' && panStartRef.current) {
@@ -879,10 +892,6 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     draw(e);
   };
 
-  // ── CURSOR SIZE ──────────────────────────────────────
-  const cursorSize =
-    (activeTool === 'eraser' ? brushSize * 4 : brushSize) * zoom;
-
   // ── TEXT TEXTAREA RESIZE ─────────────────────────────
   useEffect(() => {
     const ta = textareaRef.current;
@@ -892,6 +901,17 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     ta.style.width = `${Math.max(20, ta.scrollWidth)}px`;
     ta.style.height = `${ta.scrollHeight}px`;
   }, [textValue]);
+
+  // ── DYNAMIC CURSOR RESIZE ────────────────────────────
+  useEffect(() => {
+    if (cursorRef.current && canvasRef.current) {
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      const canvasLineWidth = activeTool === 'eraser' ? brushSize * 4 : brushSize;
+      const visualCursorSize = canvasLineWidth * (canvasRect.width / CANVAS_RESOLUTION);
+      cursorRef.current.style.width = `${visualCursorSize}px`;
+      cursorRef.current.style.height = `${visualCursorSize}px`;
+    }
+  }, [brushSize, activeTool, zoom]);
 
   // ── RENDER ───────────────────────────────────────────
   return (
@@ -1042,8 +1062,6 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
         ref={cursorRef}
         className="absolute top-0 left-0 rounded-full pointer-events-none z-50 border-[1.5px] border-white mix-blend-difference"
         style={{
-          width: `${cursorSize}px`,
-          height: `${cursorSize}px`,
           opacity:
             isHovering &&
             !['none','text','picker','paint','move','hand']
