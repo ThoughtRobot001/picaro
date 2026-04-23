@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Loader2, Sparkles, X } from 'lucide-react';
+import { Loader2, Sparkles, X, ChevronUp } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import {
   generateFromSketch,
@@ -47,26 +47,13 @@ const getProcessSteps = (hasSeed: boolean) =>
         'Finalizing...',
       ];
 
-function ChatMessage({
-  role,
-  text,
-}: {
-  role: 'user' | 'ai';
-  text: string;
-}) {
-  return (
-    <div className={`flex ${role === 'user' ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={`max-w-[90%] rounded-[16px] px-3.5 py-2.5 text-[13px] leading-[1.4] shadow-sm ${
-          role === 'user'
-            ? 'rounded-br-[4px] border border-white/10 bg-white text-black font-medium'
-            : 'rounded-bl-[4px] border border-white/[0.08] bg-white/[0.03] text-white/80'
-        }`}
-      >
-        {text}
-      </div>
-    </div>
-  );
+interface Iteration {
+  id: string;
+  step: string;
+  prompt: string;
+  thumbnailUrl: string | null;
+  isRefinement: boolean;
+  isActive: boolean;
 }
 
 export const PromptPanel: React.FC<PromptPanelProps> = ({
@@ -83,36 +70,20 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
     activeCharacterSeedId,
   } = useStore();
   const { refresh: refreshUsage } = useUsage();
-  const [messages, setMessages] = useState<
-    { id: string; role: 'user' | 'ai'; text: string }[]
-  >([
-    {
-      id: '1',
-      role: 'ai',
-      text: 'Draw something on the canvas, then click Generate to render it.',
-    },
-  ]);
+  const [iterations, setIterations] = useState<Iteration[]>([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
   const [text, setText] = useState('');
   const [procStep, setProcStep] = useState(0);
-  const [lastGeneratedURL, setLastGeneratedURL] =
-    useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [lastGeneratedURL, setLastGeneratedURL] = useState<string | null>(null);
   const activeSeed =
     characterSeeds.find((s) => s.id === activeCharacterSeedId) ?? null;
   const processSteps = getProcessSteps(!!activeSeed);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  useEffect(() => {
-    setMessages([
-      {
-        id: '1',
-        role: 'ai',
-        text: 'Draw something on the canvas, then click Generate to render it.',
-      },
-    ]);
+    setIterations([]);
+    setErrorMsg(null);
     setText('');
     setProcStep(0);
     setLastGeneratedURL(null);
@@ -141,9 +112,6 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
     userPrompt: string,
     mode: 'generate' | 'refine' = 'generate'
   ) => {
-    // Auth is handled by Edge Function
-    // No API key needed in frontend
-
     setIsGenerating(true);
     setProcStep(1);
 
@@ -196,6 +164,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
       result = await generateFromSketch(promptOptions);
     }
 
+    setErrorMsg(null);
     setIsGenerating(false);
     setProcStep(0);
 
@@ -205,32 +174,33 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
       refreshUsage();
       const { currentPageId, updatePageResult } = useStore.getState();
       updatePageResult(currentPageId, result.imageURL);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `${Date.now()}-a`,
-          role: 'ai' as const,
-          text: `Done! Rendered as ${selectedStyle}. Use the prompt box to refine further.`,
-        },
-      ]);
+      
+      setIterations((prev) => {
+        const isRefinement = mode === 'refine';
+        const branchCount = prev.filter(i => i.isRefinement).length;
+        const stepLabel = isRefinement 
+          ? `Step ${prev.length - branchCount}.${branchCount + 1}` 
+          : `Step ${prev.length + 1}`;
+          
+        return [
+          ...prev.map(i => ({ ...i, isActive: false })),
+          {
+            id: Date.now().toString(),
+            step: stepLabel,
+            prompt: userPrompt || (isRefinement ? 'Refinement' : 'Initial Generation'),
+            thumbnailUrl: result.imageURL,
+            isRefinement,
+            isActive: true,
+          }
+        ];
+      });
+      if (iterations.length > 0 && !isDrawerOpen) {
+         setIsDrawerOpen(true);
+      }
     } else if (result.error === 'LIMIT_REACHED') {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `${Date.now()}-limit`,
-          role: 'ai' as const,
-          text: '🚫 You have used all 10 free generations this month. Upgrade to Starter ($15/mo) for 80 generations, unlimited refinements, and no watermarks.',
-        },
-      ]);
+      setErrorMsg('You have used all 10 free generations this month. Upgrade to Starter for unlimited.');
     } else {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `${Date.now()}-err`,
-          role: 'ai' as const,
-          text: `Generation failed: ${result.error ?? 'Unknown error'}`,
-        },
-      ]);
+      setErrorMsg(`Generation failed: ${result.error ?? 'Unknown error'}`);
     }
   };
 
@@ -243,10 +213,6 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
   const handleSend = async () => {
     const trimmed = text.trim();
     if (!trimmed || isGenerating) return;
-    setMessages((prev) => [
-      ...prev,
-      { id: `${Date.now()}-u`, role: 'user' as const, text: trimmed },
-    ]);
     setText('');
     await runGeneration(trimmed, 'refine');
   };
@@ -340,57 +306,115 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
             currentGeneratedImageURL={currentGeneratedImageURL}
           />
         </div>
-
-        <div className="mt-auto shrink-0 border-t border-white/[0.06] px-6 py-6 bg-[#0a0a0c]">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
-                Refinement Prompt
-              </span>
-              <span className="text-[10px] font-mono text-white/20">
-                {text.length}/2000
-              </span>
+        <div className="mt-auto shrink-0 relative bg-[#0a0a0c]">
+          <div 
+            className={`absolute bottom-[100%] left-0 right-0 bg-[#0a0a0c]/80 backdrop-blur-2xl border-t border-white/[0.08] shadow-[0_-20px_40px_rgba(0,0,0,0.5)] transition-all duration-400 ease-[cubic-bezier(0.23,1,0.32,1)] flex flex-col overflow-hidden z-20`}
+            style={{ 
+              height: isDrawerOpen ? '35vh' : '0px', 
+              opacity: isDrawerOpen ? 1 : 0,
+              visibility: isDrawerOpen ? 'visible' : 'hidden',
+            }}
+          >
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5 [scrollbar-width:thin]">
+              {iterations.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-white/20">
+                  <Sparkles size={24} className="mb-3 opacity-20" />
+                  <span className="text-[12px] font-medium tracking-wide">No iterations yet</span>
+                  <span className="text-[11px] mt-1 text-center max-w-[200px] opacity-70">Generate an image to start your timeline history.</span>
+                </div>
+              ) : (
+                iterations.map((iter, idx) => (
+                  <div key={iter.id} className={`flex gap-4 relative group ${iter.isRefinement ? 'ml-8' : ''}`}>
+                    {idx < iterations.length - 1 && (
+                      <div className="absolute left-[15px] top-[32px] bottom-[-20px] w-[2px] bg-white/[0.05] group-hover:bg-white/[0.1] transition-colors" />
+                    )}
+                    {iter.isRefinement && (
+                       <div className="absolute left-[-24px] top-[15px] w-[16px] h-[2px] bg-white/[0.05]" />
+                    )}
+                    <div className={`w-8 h-8 rounded-[8px] shrink-0 border relative z-10 overflow-hidden bg-[#111] transition-all duration-300
+                      ${iter.isActive ? 'border-[#3b82f6] shadow-[0_0_15px_rgba(59,130,246,0.25)]' : 'border-white/10 opacity-60 hover:opacity-80'}`}>
+                      {iter.thumbnailUrl ? (
+                        <img src={iter.thumbnailUrl} className="w-full h-full object-cover" alt={iter.prompt} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Sparkles size={12} className="text-white/20"/>
+                        </div>
+                      )}
+                    </div>
+                    <div className={`flex flex-col justify-center min-w-0 transition-opacity duration-300 ${iter.isActive ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}`}>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-mono tracking-wider uppercase ${iter.isActive ? 'text-[#3b82f6]' : 'text-white/40'}`}>
+                          {iter.step}
+                        </span>
+                        {iter.isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6] shadow-[0_0_8px_rgba(59,130,246,0.8)] animate-pulse" />
+                        )}
+                      </div>
+                      <span className="text-[13px] text-white/90 truncate font-medium mt-0.5">
+                        {iter.prompt}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-
-            <div className="relative">
-              <textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => {
-                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    e.preventDefault();
-                    handleGenerate();
-                    return;
-                  }
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-                placeholder="E.g., Make it look like a pencil sketch..."
-                rows={3}
-                className="w-full resize-none rounded-[16px] border border-white/5 bg-white/[0.02] px-4 py-3.5 text-[13px] leading-relaxed text-white/90 placeholder-white/30 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all"
-              />
-              <button
-                type="button"
-                disabled={!text.trim() || isGenerating}
-                onClick={handleSend}
-                className="absolute bottom-2.5 right-2.5 rounded-[10px] bg-white/10 px-3.5 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
-              >
-                Send
-              </button>
+          </div>
+          <button 
+            type="button"
+            onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+            className="w-full h-8 flex items-center justify-center gap-2 border-t border-b border-white/[0.04] bg-[#0a0a0c] hover:bg-white/[0.02] transition-colors cursor-pointer"
+          >
+             <ChevronUp size={12} className={`text-white/30 transition-transform duration-300 ${isDrawerOpen ? 'rotate-180' : ''}`} />
+             <span className="text-[10px] text-white/30 font-mono tracking-widest uppercase">
+                {iterations.length} iterations • {iterations.filter(i => i.isRefinement).length > 0 ? '1 branch' : '0 branches'}
+             </span>
+          </button>
+          <div className="px-6 py-6">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
+                  Refinement Prompt
+                </span>
+                <span className="text-[10px] font-mono text-white/20">
+                  {text.length}/2000
+                </span>
+              </div>
+              {errorMsg && (
+                <div className="text-[11px] text-red-400 bg-red-400/10 rounded-md px-3 py-2 border border-red-500/20">
+                  {errorMsg}
+                </div>
+              )}
+              <div className="relative">
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                      e.preventDefault();
+                      handleGenerate();
+                      return;
+                    }
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder="E.g., Make it look like a pencil sketch..."
+                  rows={3}
+                  className="w-full resize-none rounded-[16px] border border-white/5 bg-white/[0.02] px-4 py-3.5 text-[13px] leading-relaxed text-white/90 placeholder-white/30 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all"
+                />
+                <button
+                  type="button"
+                  disabled={!text.trim() || isGenerating}
+                  onClick={handleSend}
+                  className="absolute bottom-2.5 right-2.5 rounded-[10px] bg-white/10 px-3.5 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  Send
+                </button>
+              </div>
             </div>
           </div>
         </div>
-
-        {messages.length > 0 && (
-          <div className="flex flex-col shrink-0 gap-4 px-6 py-6 border-t border-white/[0.06] bg-[#0b0b0d]">
-            {messages.map((m) => (
-              <ChatMessage key={m.id} role={m.role} text={m.text} />
-            ))}
-            <div ref={messagesEndRef} className="h-2 shrink-0" />
-          </div>
-        )}
       </div>
     </div>
   );
