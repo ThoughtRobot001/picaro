@@ -364,7 +364,7 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
                       Use here
                     </span>
                   </div>
-                  <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <div className="absolute top-1 right-1 opacity-40 group-hover:opacity-100 transition-opacity z-10">
                     <DropdownMenu.Root>
                       <DropdownMenu.Trigger asChild>
                         <button
