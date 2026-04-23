@@ -55,6 +55,7 @@ export default function PicaroApp() {
     createNewProject,
     switchProject,
     renameProject,
+    deletePageFromDatabase,
   } = useDatabase();
 
   const canvasExportRef = useRef<Record<number, string>>({});
@@ -398,7 +399,7 @@ export default function PicaroApp() {
             />
           </div>
 
-          <Filmstrip />
+          <Filmstrip deletePageFromDatabase={deletePageFromDatabase} />
         </div>
 
         <div className="shrink-0 flex self-stretch pt-3 pb-0 pr-3">

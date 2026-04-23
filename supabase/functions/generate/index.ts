@@ -1,3 +1,5 @@
+// @ts-nocheck
+// Suppress TS errors in VS Code since this is a Deno environment, not Node.
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 

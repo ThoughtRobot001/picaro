@@ -381,8 +381,8 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
                           className="z-[200] min-w-[140px] rounded-xl border border-white/[0.08] bg-[#0f0f13] p-1.5 shadow-2xl animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95"
                         >
                           <DropdownMenu.Item
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onSelect={(e) => {
+                              e.preventDefault();
                               setSeedToDelete(seed.id);
                             }}
                             className="flex cursor-pointer select-none items-center gap-2 rounded-[8px] px-2.5 py-2 text-[11px] font-medium font-mono text-red-400 outline-none transition-colors hover:bg-red-500/10"

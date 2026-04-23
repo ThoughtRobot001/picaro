@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import { Plus, MoreVertical, Trash2 } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useStore } from '../../store/useStore';
-import { useDatabase } from '../../lib/useDatabase';
 import { ConfirmModal } from '../ui/ConfirmModal';
 
-export const Filmstrip: React.FC = () => {
+interface FilmstripProps {
+  deletePageFromDatabase: (pageNumber: number) => Promise<void>;
+}
+
+export const Filmstrip: React.FC<FilmstripProps> = ({ deletePageFromDatabase }) => {
   const { pages, currentPageId, switchPage, addPage, removePage } = useStore();
-  const { deletePageFromDatabase } = useDatabase();
   const [pageToDelete, setPageToDelete] = useState<number | null>(null);
 
   const handleDeleteConfirm = async () => {
-    if (pageToDelete === null) return;
+    if (pageToDelete === null || pages.length <= 1) return;
     await deletePageFromDatabase(pageToDelete);
     removePage(pageToDelete);
     setPageToDelete(null);
@@ -85,8 +87,9 @@ export const Filmstrip: React.FC = () => {
                     >
                       <DropdownMenu.Item
                         disabled={pages.length <= 1}
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          if (pages.length <= 1) return;
                           setPageToDelete(page.id);
                         }}
                         className="flex cursor-pointer select-none items-center gap-2 rounded-[8px] px-2.5 py-2 text-[11px] font-medium font-mono text-red-400 outline-none transition-colors hover:bg-red-500/10 data-[disabled]:opacity-40 data-[disabled]:pointer-events-none"
