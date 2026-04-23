@@ -68,17 +68,17 @@ const UserDropdown: React.FC<{
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-xl border border-white/[0.08] bg-[#0f0f11] shadow-2xl z-50">
-          <div className="border-b border-white/[0.08] px-4 py-3">
-            <p className="truncate text-xs font-medium text-white/80">{user.email}</p>
+        <div className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0f0f11]/90 backdrop-blur-xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200">
+          <div className="border-b border-white/[0.08] px-4 py-3 bg-white/[0.02]">
+            <p className="truncate text-[11px] font-medium text-white/90">{user.email}</p>
           </div>
-          <div className="p-1">
+          <div className="p-1.5">
             <button
               onClick={() => {
                 setIsOpen(false);
                 signOut();
               }}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-red-400 transition-colors hover:bg-white/5"
+              className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-red-400 transition-all hover:bg-red-500/10 active:scale-[0.98]"
             >
               <LogOut size={14} />
               Sign Out
@@ -130,56 +130,62 @@ const ProjectDropdown: React.FC<{
       </button>
 
       {isOpen && (
-        <div className="absolute top-full mt-2 w-56 overflow-hidden rounded-xl border border-white/[0.08] bg-[#0f0f11] shadow-2xl z-50">
-          <div className="p-1">
+        <div className="absolute top-full mt-2 w-64 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0f0f11]/90 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 animate-in fade-in zoom-in-95 duration-200">
+          <div className="p-1.5">
             <button
               onClick={() => {
                 setIsOpen(false);
                 onRenameClick();
               }}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-white/80 transition-colors hover:bg-white/5"
+              className="group flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-[12px] font-medium text-white/80 transition-all hover:bg-white/10 hover:text-white active:scale-[0.98]"
             >
-              <Pencil size={14} className="text-white/40" />
+              <Pencil size={14} className="text-white/40 group-hover:text-white/70 transition-colors" />
               Rename
             </button>
           </div>
           
-          <div className="h-px w-full bg-white/[0.08]" />
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
           
-          <div className="max-h-60 overflow-y-auto p-1">
-            <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-white/30">
+          <div className="max-h-64 overflow-y-auto p-1.5 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20">
+            <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
               Recent Projects
             </div>
-            {projects.map((p, i) => (
-              <button
-                key={p.id}
-                onClick={() => {
-                  setIsOpen(false);
-                  if (p.id !== currentProjectId) onProjectSwitch(p.id);
-                }}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-white/80 transition-colors hover:bg-white/5"
-              >
-                {p.id === currentProjectId ? (
-                  <Check size={14} className="text-[#12b76a] shrink-0" />
-                ) : (
-                  <div className="w-[14px] shrink-0" />
-                )}
-                <span className="truncate">{p.title || `Project ${i + 1}`}</span>
-              </button>
-            ))}
+            <div className="flex flex-col gap-0.5">
+              {projects.map((p, i) => (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    setIsOpen(false);
+                    if (p.id !== currentProjectId) onProjectSwitch(p.id);
+                  }}
+                  className={`group flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-[12px] font-medium transition-all active:scale-[0.98] ${
+                    p.id === currentProjectId
+                      ? 'bg-[#12b76a]/10 text-[#12b76a]'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  {p.id === currentProjectId ? (
+                    <Check size={14} className="shrink-0" />
+                  ) : (
+                    <div className="w-[14px] shrink-0" />
+                  )}
+                  <span className="truncate">{p.title || `Project ${i + 1}`}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="h-px w-full bg-white/[0.08]" />
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
 
-          <div className="p-1">
+          <div className="p-1.5 bg-black/20">
             <button
               onClick={() => {
                 setIsOpen(false);
                 onCreateProject();
               }}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-white/80 transition-colors hover:bg-white/5"
+              className="group flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-[12px] font-medium text-white/80 transition-all hover:bg-[#3b82f6]/10 hover:text-[#7ab3ff] active:scale-[0.98]"
             >
-              <Plus size={14} className="text-white/40" />
+              <Plus size={14} className="text-white/40 group-hover:text-[#7ab3ff] transition-colors" />
               New Project
             </button>
           </div>
