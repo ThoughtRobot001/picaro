@@ -116,7 +116,13 @@ const ProjectDropdown: React.FC<{
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+      const target = e.target as HTMLElement;
+      // Don't close if clicking inside the TopBar dropdown itself
+      if (ref.current && ref.current.contains(target)) return;
+      // Don't close if clicking inside a Radix portal (like our nested dropdown menu)
+      if (target.closest('[data-radix-portal]') || target.closest('[role="menu"]')) return;
+      
+      setIsOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
