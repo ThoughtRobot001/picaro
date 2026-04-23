@@ -1,5 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { Plus, Trash2, Upload, Check, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Upload, Check, X, ChevronDown, ChevronRight, MoreVertical } from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { ConfirmModal } from '../ui/ConfirmModal';
 import { useStore } from '../../store/useStore';
 import { useDatabase } from '../../lib/useDatabase';
 
@@ -56,6 +58,7 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [seedToDelete, setSeedToDelete] = useState<string | null>(null);
 
   const atLimit = characterSeeds.length >= maxSeeds;
   const usedInProjectSeeds = characterSeeds.filter((seed) =>
@@ -169,6 +172,14 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
   const handleDeleteSeed = async (seedId: string) => {
     await deleteSeedFromDatabase(seedId);
     removeCharacterSeed(seedId);
+  };
+
+  const handleDeleteSeedConfirm = async () => {
+    if (!seedToDelete) return;
+    setSaving(true);
+    await handleDeleteSeed(seedToDelete);
+    setSaving(false);
+    setSeedToDelete(null);
   };
 
   return (
@@ -353,16 +364,36 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
                       Use here
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void handleDeleteSeed(seed.id);
-                    }}
-                    className="absolute top-1 left-1 w-5 h-5 rounded-md bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/60"
-                  >
-                    <Trash2 size={9} className="text-white" />
-                  </button>
+                  <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <DropdownMenu.Root>
+                      <DropdownMenu.Trigger asChild>
+                        <button
+                          type="button"
+                          className="flex h-5 w-5 items-center justify-center rounded-md bg-black/60 hover:bg-black/80 text-white/70 hover:text-white transition-colors"
+                        >
+                          <MoreVertical size={9} />
+                        </button>
+                      </DropdownMenu.Trigger>
+                      <DropdownMenu.Portal>
+                        <DropdownMenu.Content
+                          align="start"
+                          sideOffset={4}
+                          className="z-[200] min-w-[140px] rounded-xl border border-white/[0.08] bg-[#0f0f13] p-1.5 shadow-2xl animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95"
+                        >
+                          <DropdownMenu.Item
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSeedToDelete(seed.id);
+                            }}
+                            className="flex cursor-pointer select-none items-center gap-2 rounded-[8px] px-2.5 py-2 text-[11px] font-medium font-mono text-red-400 outline-none transition-colors hover:bg-red-500/10"
+                          >
+                            <Trash2 size={12} />
+                            Delete Seed
+                          </DropdownMenu.Item>
+                        </DropdownMenu.Content>
+                      </DropdownMenu.Portal>
+                    </DropdownMenu.Root>
+                  </div>
                 </div>
               ))}
             </div>
@@ -375,6 +406,15 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
           </>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={seedToDelete !== null}
+        title="Delete Character Seed?"
+        description="Are you sure you want to delete this character seed? This action cannot be undone."
+        confirmText="Delete Seed"
+        onConfirm={() => void handleDeleteSeedConfirm()}
+        onCancel={() => setSeedToDelete(null)}
+      />
 
       <div className="flex gap-2.5 pt-3 border-t border-white/[0.02]">
         <button

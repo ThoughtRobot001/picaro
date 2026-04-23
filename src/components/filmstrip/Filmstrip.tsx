@@ -1,9 +1,21 @@
-import React from 'react';
-import { Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, MoreVertical, Trash2 } from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useStore } from '../../store/useStore';
+import { useDatabase } from '../../lib/useDatabase';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 export const Filmstrip: React.FC = () => {
-  const { pages, currentPageId, switchPage, addPage } = useStore();
+  const { pages, currentPageId, switchPage, addPage, removePage } = useStore();
+  const { deletePageFromDatabase } = useDatabase();
+  const [pageToDelete, setPageToDelete] = useState<number | null>(null);
+
+  const handleDeleteConfirm = async () => {
+    if (pageToDelete === null) return;
+    await deletePageFromDatabase(pageToDelete);
+    removePage(pageToDelete);
+    setPageToDelete(null);
+  };
 
   return (
     <div className="picaro-filmstrip relative w-full shrink-0 overflow-hidden bg-[#090909]">
@@ -19,41 +31,74 @@ export const Filmstrip: React.FC = () => {
         {pages.map((page, i) => {
           const isActive = page.id === currentPageId;
           return (
-            <button
-              key={page.id}
-              type="button"
-              aria-current={isActive ? 'page' : undefined}
-              onClick={() => switchPage(page.id)}
-              className={`group relative shrink-0 border-0 cursor-pointer rounded-[8px] overflow-hidden transition-all duration-150 ${
-                isActive
-                  ? 'ring-1 ring-white/30 ring-offset-1 ring-offset-[#090909]'
-                  : 'opacity-70 hover:opacity-100'
-              }`}
-              style={{ width: 96, height: 60 }}
-            >
-              {page.canvasDataURL ? (
-                <img
-                  src={page.canvasDataURL}
-                  alt={`Frame ${i + 1}`}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  style={{ filter: 'brightness(0.82) saturate(0.6)' }}
-                />
-              ) : (
-                <div className="absolute inset-0 bg-[#141416]" />
-              )}
+            <div key={page.id} className="relative group shrink-0" style={{ width: 96, height: 60 }}>
+              <button
+                type="button"
+                aria-current={isActive ? 'page' : undefined}
+                onClick={() => switchPage(page.id)}
+                className={`relative w-full h-full border-0 cursor-pointer rounded-[8px] overflow-hidden transition-all duration-150 ${
+                  isActive
+                    ? 'ring-1 ring-white/30 ring-offset-1 ring-offset-[#090909]'
+                    : 'opacity-70 hover:opacity-100'
+                }`}
+              >
+                {page.canvasDataURL ? (
+                  <img
+                    src={page.canvasDataURL}
+                    alt={`Frame ${i + 1}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ filter: 'brightness(0.82) saturate(0.6)' }}
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-[#141416]" />
+                )}
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
 
-              <div className="absolute bottom-1 left-2">
-                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white/60">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
+                <div className="absolute bottom-1 left-2">
+                  <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white/60">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                </div>
+
+                {isActive && (
+                  <div className="absolute bottom-0 inset-x-0 h-[2px] bg-[#3b82f6]" />
+                )}
+              </button>
+
+              <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      type="button"
+                      className="w-6 h-6 rounded flex items-center justify-center bg-black/60 hover:bg-black/80 text-white/70 hover:text-white transition-colors"
+                    >
+                      <MoreVertical size={12} />
+                    </button>
+                  </DropdownMenu.Trigger>
+
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      align="end"
+                      sideOffset={4}
+                      className="z-[200] min-w-[140px] rounded-xl border border-white/[0.08] bg-[#0f0f13] p-1.5 shadow-2xl animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95"
+                    >
+                      <DropdownMenu.Item
+                        disabled={pages.length <= 1}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPageToDelete(page.id);
+                        }}
+                        className="flex cursor-pointer select-none items-center gap-2 rounded-[8px] px-2.5 py-2 text-[11px] font-medium font-mono text-red-400 outline-none transition-colors hover:bg-red-500/10 data-[disabled]:opacity-40 data-[disabled]:pointer-events-none"
+                      >
+                        <Trash2 size={12} />
+                        Delete Page
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
               </div>
-
-              {isActive && (
-                <div className="absolute bottom-0 inset-x-0 h-[2px] bg-[#3b82f6]" />
-              )}
-            </button>
+            </div>
           );
         })}
 
@@ -70,6 +115,15 @@ export const Filmstrip: React.FC = () => {
           </span>
         </button>
       </div>
+
+      <ConfirmModal
+        isOpen={pageToDelete !== null}
+        title="Delete Scene?"
+        description="Are you sure you want to delete this scene? All its associated canvas data and refinement history will be permanently lost."
+        confirmText="Delete Scene"
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => setPageToDelete(null)}
+      />
     </div>
   );
 };

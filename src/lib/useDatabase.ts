@@ -11,6 +11,8 @@ import {
   saveCharacterSeed,
   savePage,
   updateProjectTitle,
+  deletePage,
+  deletePageIterations,
   type ProjectSummary,
 } from '../services/database';
 
@@ -211,6 +213,15 @@ export function useDatabase() {
     [user]
   );
 
+  const deletePageFromDatabase = useCallback(
+    async (pageNumber: number) => {
+      if (!user || !projectIdRef.current) return;
+      await deletePage(projectIdRef.current, pageNumber);
+      await deletePageIterations(projectIdRef.current, pageNumber);
+    },
+    [user]
+  );
+
   const createNewProject = useCallback(async (title?: string) => {
     if (!user) return;
 
@@ -268,6 +279,7 @@ export function useDatabase() {
     currentProjectTitle,
     projects,
     saveCurrentPage,
+    deletePageFromDatabase,
     saveSeedToDatabase,
     deleteSeedFromDatabase,
     createNewProject,
