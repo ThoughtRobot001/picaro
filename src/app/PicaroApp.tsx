@@ -388,6 +388,7 @@ export default function PicaroApp() {
         onCreateProject={createNewProject}
         onProjectRename={renameProject}
         onProjectSwitch={switchProject}
+        onProjectDelete={deleteProjectFromDatabase}
       />
 
       <div className="flex flex-row flex-1 min-h-0 overflow-hidden">

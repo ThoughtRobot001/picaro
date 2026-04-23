@@ -4,6 +4,9 @@ import { useAuth } from './useAuth';
 import {
   createProject,
   deleteCharacterSeed,
+  deletePage,
+  deletePageIterations,
+  deleteProjectRecord,
   getOrCreateProject,
   listProjects,
   loadCharacterSeeds,
@@ -11,8 +14,6 @@ import {
   saveCharacterSeed,
   savePage,
   updateProjectTitle,
-  deletePage,
-  deletePageIterations,
   type ProjectSummary,
 } from '../services/database';
 
@@ -258,6 +259,21 @@ export function useDatabase() {
     [refreshProjects, user]
   );
 
+  const deleteProjectFromDatabase = useCallback(
+    async (projectId: string) => {
+      if (!user) return;
+      await deleteProjectRecord(projectId);
+      
+      const remainingProjects = projects.filter(p => p.id !== projectId);
+      if (remainingProjects.length > 0) {
+        await loadProjectWorkspace(user.id, remainingProjects[0]);
+      } else {
+        await createNewProject('Untitled Art');
+      }
+    },
+    [user, projects, loadProjectWorkspace, createNewProject]
+  );
+
   const saveSeedToDatabase = useCallback(
     async (name: string, imageBase64: string) => {
       if (!user) return null;
@@ -285,5 +301,6 @@ export function useDatabase() {
     createNewProject,
     switchProject,
     renameProject,
+    deleteProjectFromDatabase,
   };
 }

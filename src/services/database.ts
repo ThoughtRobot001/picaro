@@ -93,6 +93,20 @@ export async function updateProjectTitle(
     .eq('id', projectId);
 }
 
+export async function deleteProjectRecord(
+  projectId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', projectId);
+
+  if (error) {
+    console.error('Error deleting project:', error);
+    throw error;
+  }
+}
+
 export async function savePage(
   projectId: string,
   userId: string,

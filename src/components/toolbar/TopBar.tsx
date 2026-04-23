@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Redo2, Pencil, Plus, Share2, Undo2, ChevronDown, Check, LogOut, User as UserIcon, FolderPlus, Sparkles, X } from 'lucide-react';
+import { Redo2, Pencil, Plus, Share2, Undo2, ChevronDown, Check, LogOut, User as UserIcon, FolderPlus, Sparkles, X, Trash2 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { ExportModal } from '../export/ExportModal';
 import { AuthModal } from '../auth/AuthModal';
+import { ConfirmModal } from '../ui/ConfirmModal';
 import { useAuth } from '../../lib/useAuth';
 import { useUsage } from '../../lib/useUsage';
 import type { ProjectSummary } from '../../services/database';
@@ -14,6 +15,7 @@ interface TopBarProps {
   onCreateProject: (title?: string) => void;
   onProjectRename: (title: string) => void;
   onProjectSwitch: (projectId: string) => void;
+  onProjectDelete: (projectId: string) => void;
 }
 
 interface TopBarActionsProps {
@@ -97,6 +99,7 @@ const ProjectDropdown: React.FC<{
   onCreateProject: () => void;
   onProjectSwitch: (projectId: string) => void;
   onRenameClick: () => void;
+  onProjectDelete: (projectId: string) => void;
 }> = ({
   title,
   projects,
@@ -104,8 +107,10 @@ const ProjectDropdown: React.FC<{
   onCreateProject,
   onProjectSwitch,
   onRenameClick,
+  onProjectDelete,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -152,25 +157,37 @@ const ProjectDropdown: React.FC<{
             </div>
             <div className="flex flex-col gap-0.5">
               {projects.map((p, i) => (
-                <button
-                  key={p.id}
-                  onClick={() => {
-                    setIsOpen(false);
-                    if (p.id !== currentProjectId) onProjectSwitch(p.id);
-                  }}
-                  className={`group flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-[12px] font-medium transition-all active:scale-[0.98] ${
-                    p.id === currentProjectId
-                      ? 'bg-[#12b76a]/10 text-[#12b76a]'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  {p.id === currentProjectId ? (
-                    <Check size={14} className="shrink-0" />
-                  ) : (
-                    <div className="w-[14px] shrink-0" />
-                  )}
-                  <span className="truncate">{p.title || `Project ${i + 1}`}</span>
-                </button>
+                <div key={p.id} className="group relative flex w-full items-center">
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      if (p.id !== currentProjectId) onProjectSwitch(p.id);
+                    }}
+                    className={`flex flex-1 items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-[12px] font-medium transition-all active:scale-[0.98] ${
+                      p.id === currentProjectId
+                        ? 'bg-[#12b76a]/10 text-[#12b76a]'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {p.id === currentProjectId ? (
+                      <Check size={14} className="shrink-0" />
+                    ) : (
+                      <div className="w-[14px] shrink-0" />
+                    )}
+                    <span className="truncate pr-6">{p.title || `Project ${i + 1}`}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsOpen(false);
+                      setProjectToDelete(p.id);
+                    }}
+                    className="absolute right-2 opacity-0 group-hover:opacity-100 flex h-6 w-6 items-center justify-center rounded-md text-red-400/70 hover:bg-red-500/10 hover:text-red-400 transition-all"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               ))}
             </div>
           </div>
@@ -191,6 +208,20 @@ const ProjectDropdown: React.FC<{
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={projectToDelete !== null}
+        title="Delete Project?"
+        description="Are you sure you want to delete this project? All associated pages, sketches, and generated images will be permanently destroyed."
+        confirmText="Delete Project"
+        onConfirm={() => {
+          if (projectToDelete) {
+            onProjectDelete(projectToDelete);
+          }
+          setProjectToDelete(null);
+        }}
+        onCancel={() => setProjectToDelete(null)}
+      />
     </div>
   );
 };
@@ -231,6 +262,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onCreateProject,
   onProjectRename,
   onProjectSwitch,
+  onProjectDelete,
 }) => {
   const [title, setTitle] = useState(projectTitle || 'Untitled Art');
   const [isEditing, setIsEditing] = useState(false);
@@ -320,6 +352,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               onCreateProject={() => setCreateProjectOpen(true)}
               onProjectSwitch={onProjectSwitch}
               onRenameClick={() => setIsEditing(true)}
+              onProjectDelete={onProjectDelete}
             />
           )}
         </div>
