@@ -56,6 +56,7 @@ export default function PicaroApp() {
     switchProject,
     renameProject,
     deletePageFromDatabase,
+    deleteProjectFromDatabase,
   } = useDatabase();
 
   const canvasExportRef = useRef<Record<number, string>>({});
