@@ -7,6 +7,7 @@ export interface GenerateOptions {
   prompt: string;
   style: string;
   characterSeedBase64?: string | null;
+  isRefinement?: boolean;
 }
 
 export interface GenerateResult {
@@ -216,12 +217,33 @@ async function buildPrompt(
   return parts.join('. ') + '.';
 }
 
+export async function buildRefinementPrompt(
+  userPrompt: string,
+  style: string
+): Promise<string> {
+  const styleConfig = STYLE_INSTRUCTIONS[style] ?? {
+    quality: 'white background, clean, professional',
+  };
+
+  const parts = [
+    userPrompt.trim(),
+    'Keep everything else in the image exactly the same',
+    'Preserve the overall composition, lighting, and style',
+    'Only change what was explicitly requested',
+    styleConfig.quality,
+  ];
+
+  return parts.filter(Boolean).join('. ') + '.';
+}
+
 export async function generateFromSketch(
   options: GenerateOptions,
   _apiKey?: string
 ): Promise<GenerateResult> {
   const { sketchDataURL, prompt, style } = options;
-  const fullPrompt = await buildPrompt(sketchDataURL, style, prompt);
+  const fullPrompt = options.isRefinement
+    ? await buildRefinementPrompt(prompt, style)
+    : await buildPrompt(sketchDataURL, style, prompt);
 
   return callEdgeFunction('flux-kontext-pro', {
     prompt: fullPrompt,

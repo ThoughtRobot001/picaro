@@ -79,6 +79,30 @@ serve(async (req) => {
     const body = await req.json();
     const { model, input, saveToStorage = true } = body;
 
+    if (!model || !input) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const ALLOWED_MODELS = ['flux-kontext-pro', 'flux-2-pro'];
+    if (!ALLOWED_MODELS.includes(model)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid model' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024 * 1.37;
+    const imageStr = input.input_image || (input.input_images?.[0] ?? '');
+    if (imageStr.length > MAX_IMAGE_SIZE) {
+      return new Response(
+        JSON.stringify({ error: 'Image too large' }),
+        { status: 413, headers: corsHeaders }
+      );
+    }
+
     const replicateKey = Deno.env.get('REPLICATE_API_KEY');
     if (!replicateKey) {
       return new Response(

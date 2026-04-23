@@ -8,6 +8,9 @@ import {
 } from '../../services/aiGenerate';
 import { CharacterSeedPanel } from '../seeds/CharacterSeedPanel';
 import { useUsage } from '../../lib/useUsage';
+import { saveIteration, loadIterations } from '../../services/database';
+import { useDatabase } from '../../lib/useDatabase';
+import { useAuth } from '../../lib/useAuth';
 
 async function urlToDataURL(url: string): Promise<string> {
   try {
@@ -68,7 +71,10 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
     setIsGenerating,
     characterSeeds,
     activeCharacterSeedId,
+    currentPageId,
   } = useStore();
+  const { projectId } = useDatabase();
+  const { user } = useAuth();
   const { refresh: refreshUsage } = useUsage();
   const [iterations, setIterations] = useState<Iteration[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -82,11 +88,35 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
   const processSteps = getProcessSteps(!!activeSeed);
 
   useEffect(() => {
-    setIterations([]);
+    if (!projectId || !user) return;
+    loadIterations(projectId, currentPageId)
+      .then((dbIterations) => {
+        if (dbIterations.length > 0) {
+          setIterations(
+            dbIterations.map((i) => ({
+              id: i.id,
+              step: i.step,
+              prompt: i.prompt,
+              thumbnailUrl: i.thumbnail_url,
+              isRefinement: i.is_refinement,
+              isActive: i.is_active,
+            }))
+          );
+          const active = dbIterations.find((i) => i.is_active);
+          if (active?.thumbnail_url) {
+            setLastGeneratedURL(active.thumbnail_url);
+          }
+        } else {
+          setIterations([]);
+          setLastGeneratedURL(null);
+        }
+      });
+  }, [currentPageId, projectId, user]);
+
+  useEffect(() => {
     setErrorMsg(null);
     setText('');
     setProcStep(0);
-    setLastGeneratedURL(null);
   }, [currentProjectId]);
 
   useEffect(() => {
@@ -120,6 +150,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
       prompt: string;
       style: string;
       characterSeedBase64: string | null;
+      isRefinement?: boolean;
     };
 
     if (mode === 'refine' && lastGeneratedURL) {
@@ -129,6 +160,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
         prompt: userPrompt,
         style: selectedStyle,
         characterSeedBase64: null,
+        isRefinement: true,
       };
     } else {
       const canvasURL = getCanvasDataURL();
@@ -194,6 +226,29 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
           }
         ];
       });
+
+      if (projectId && user) {
+        const isRefinement = mode === 'refine';
+        const stepLabel = isRefinement 
+          ? `Step ${iterations.length - iterations.filter(i => i.isRefinement).length}.${iterations.filter(i => i.isRefinement).length + 1}` 
+          : `Step ${iterations.length + 1}`;
+
+        const newIteration = {
+          id: Date.now().toString(),
+          step: stepLabel,
+          prompt: userPrompt || (isRefinement ? 'Refinement' : 'Initial Generation'),
+          thumbnailUrl: result.imageURL ?? null,
+          isRefinement,
+          isActive: true,
+        };
+        saveIteration(
+          user.id,
+          projectId,
+          currentPageId,
+          newIteration
+        );
+      }
+
       if (iterations.length > 0 && !isDrawerOpen) {
          setIsDrawerOpen(true);
       }
@@ -201,6 +256,33 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
       setErrorMsg('You have used all 10 free generations this month. Upgrade to Starter for unlimited.');
     } else {
       setErrorMsg(`Generation failed: ${result.error ?? 'Unknown error'}`);
+    }
+  };
+
+  const handleRevertToStep = async (iter: Iteration) => {
+    if (iter.isActive) return;
+    if (!iter.thumbnailUrl) return;
+
+    setIterations((prev) =>
+      prev.map((i) => ({
+        ...i,
+        isActive: i.id === iter.id,
+      }))
+    );
+
+    setLastGeneratedURL(iter.thumbnailUrl);
+    onGenerated(iter.thumbnailUrl);
+
+    const { currentPageId, updatePageResult } = useStore.getState();
+    updatePageResult(currentPageId, iter.thumbnailUrl);
+
+    if (projectId && user) {
+      await saveIteration(
+        user.id,
+        projectId,
+        currentPageId,
+        { ...iter, isActive: true }
+      );
     }
   };
 
@@ -320,15 +402,19 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
                 </div>
               ) : (
                 iterations.map((iter, idx) => (
-                  <div key={iter.id} className={`flex gap-4 relative group ${iter.isRefinement ? 'ml-8' : ''}`}>
+                  <div 
+                    key={iter.id} 
+                    className={`flex gap-4 relative group cursor-pointer ${iter.isRefinement ? 'ml-8' : ''}`}
+                    onClick={() => handleRevertToStep(iter)}
+                  >
                     {idx < iterations.length - 1 && (
                       <div className="absolute left-[15px] top-[32px] bottom-[-20px] w-[2px] bg-white/[0.05] group-hover:bg-white/[0.1] transition-colors" />
                     )}
                     {iter.isRefinement && (
                        <div className="absolute left-[-24px] top-[15px] w-[16px] h-[2px] bg-white/[0.05]" />
                     )}
-                    <div className={`w-8 h-8 rounded-[8px] shrink-0 border relative z-10 overflow-hidden bg-[#111] transition-all duration-300
-                      ${iter.isActive ? 'border-[#3b82f6] shadow-[0_0_15px_rgba(59,130,246,0.25)]' : 'border-white/10 opacity-60 hover:opacity-80'}`}>
+                    <div className={`w-8 h-8 rounded-[8px] shrink-0 border relative z-10 overflow-hidden bg-[#111] transition-all duration-300 hover:scale-110 hover:border-white/30
+                      ${iter.isActive ? 'border-[#3b82f6] shadow-[0_0_15px_rgba(59,130,246,0.25)]' : 'border-white/10 opacity-60 hover:opacity-100'}`}>
                       {iter.thumbnailUrl ? (
                         <img src={iter.thumbnailUrl} className="w-full h-full object-cover" alt={iter.prompt} />
                       ) : (
@@ -344,6 +430,11 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
                         </span>
                         {iter.isActive && (
                           <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6] shadow-[0_0_8px_rgba(59,130,246,0.8)] animate-pulse" />
+                        )}
+                        {!iter.isActive && (
+                          <span className="text-[9px] text-white/20 group-hover:text-white/50 transition-colors font-mono uppercase tracking-wider">
+                            click to revert
+                          </span>
                         )}
                       </div>
                       <span className="text-[13px] text-white/90 truncate font-medium mt-0.5">

@@ -241,3 +241,77 @@ export async function deleteCharacterSeed(seedId: string): Promise<void> {
     console.error('Error deleting seed:', error);
   }
 }
+
+export async function saveIteration(
+  userId: string,
+  projectId: string,
+  pageNumber: number,
+  iteration: {
+    id: string;
+    step: string;
+    prompt: string;
+    thumbnailUrl: string | null;
+    isRefinement: boolean;
+    isActive: boolean;
+  }
+): Promise<void> {
+  if (iteration.isActive) {
+    await supabase
+      .from('iterations')
+      .update({ is_active: false })
+      .eq('user_id', userId)
+      .eq('project_id', projectId)
+      .eq('page_number', pageNumber);
+  }
+
+  await supabase.from('iterations').upsert({
+    id: iteration.id,
+    user_id: userId,
+    project_id: projectId,
+    page_number: pageNumber,
+    step: iteration.step,
+    prompt: iteration.prompt,
+    thumbnail_url: iteration.thumbnailUrl,
+    is_refinement: iteration.isRefinement,
+    is_active: iteration.isActive,
+  });
+}
+
+export async function loadIterations(
+  projectId: string,
+  pageNumber: number
+): Promise<Array<{
+  id: string;
+  step: string;
+  prompt: string;
+  thumbnail_url: string | null;
+  is_refinement: boolean;
+  is_active: boolean;
+}>> {
+  const { data, error } = await supabase
+    .from('iterations')
+    .select(
+      'id, step, prompt, thumbnail_url, ' +
+      'is_refinement, is_active'
+    )
+    .eq('project_id', projectId)
+    .eq('page_number', pageNumber)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error loading iterations:', error);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function deletePageIterations(
+  projectId: string,
+  pageNumber: number
+): Promise<void> {
+  await supabase
+    .from('iterations')
+    .delete()
+    .eq('project_id', projectId)
+    .eq('page_number', pageNumber);
+}
