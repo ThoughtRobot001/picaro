@@ -14,9 +14,14 @@ export const Filmstrip: React.FC<FilmstripProps> = ({ deletePageFromDatabase }) 
 
   const handleDeleteConfirm = async () => {
     if (pageToDelete === null || pages.length <= 1) return;
-    await deletePageFromDatabase(pageToDelete);
-    removePage(pageToDelete);
-    setPageToDelete(null);
+    try {
+      await deletePageFromDatabase(pageToDelete);
+      removePage(pageToDelete);
+    } catch (err: any) {
+      alert(`Failed to delete page: ${err.message || 'Unknown error'}`);
+    } finally {
+      setPageToDelete(null);
+    }
   };
 
   return (

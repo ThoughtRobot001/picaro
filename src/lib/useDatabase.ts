@@ -216,8 +216,8 @@ export function useDatabase() {
   const deletePageFromDatabase = useCallback(
     async (pageNumber: number) => {
       if (!user || !projectIdRef.current) return;
-      await deletePage(projectIdRef.current, pageNumber);
       await deletePageIterations(projectIdRef.current, pageNumber);
+      await deletePage(projectIdRef.current, pageNumber);
     },
     [user]
   );
