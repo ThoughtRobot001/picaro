@@ -13,6 +13,7 @@ export interface GenerateResult {
   success: boolean;
   imageURL?: string;
   error?: string;
+  message?: string;
 }
 
 const STYLE_INSTRUCTIONS: Record<string, {
@@ -150,18 +151,25 @@ async function callEdgeFunction(
     });
 
     if (!response.ok) {
-      let errorMessage = `Error: ${response.status}`;
       try {
-        const err = await response.json();
-        errorMessage = err.error || err.message || errorMessage;
+        const errorData = await response.json();
+        if (errorData.error === 'LIMIT_REACHED') {
+          return {
+            success: false,
+            error: 'LIMIT_REACHED',
+            message: errorData.message,
+          };
+        }
+        return {
+          success: false,
+          error: errorData.message || `Error: ${response.status}`,
+        };
       } catch {
-        const errorText = await response.text();
-        if (errorText) errorMessage = errorText;
+        return {
+          success: false,
+          error: `Error: ${response.status}`,
+        };
       }
-      return {
-        success: false,
-        error: errorMessage,
-      };
     }
 
     const data = await response.json();

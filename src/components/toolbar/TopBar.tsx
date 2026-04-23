@@ -4,6 +4,7 @@ import { useStore } from '../../store/useStore';
 import { ExportModal } from '../export/ExportModal';
 import { AuthModal } from '../auth/AuthModal';
 import { useAuth } from '../../lib/useAuth';
+import { useUsage } from '../../lib/useUsage';
 import type { ProjectSummary } from '../../services/database';
 
 interface TopBarProps {
@@ -233,6 +234,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const { canUndo, canRedo, triggerUndo, triggerRedo } = useStore();
   const { user, signOut } = useAuth();
+  const { count, limit } = useUsage();
 
   useEffect(() => {
     setTitle(projectTitle || 'Untitled Art');
@@ -317,12 +319,35 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
 
         <div className="flex justify-end">
-          <TopBarActions
-            onExport={() => setExportOpen(true)}
-            user={user ? { email: user.email } : null}
-            signOut={signOut}
-            onOpenAuth={() => setAuthOpen(true)}
-          />
+          <div className="flex items-center gap-2">
+            {user && (
+              <div className="flex items-center gap-1.5 rounded-md border border-white/[0.06] bg-white/[0.04] px-2 py-1">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">
+                  {count}/{limit}
+                </span>
+                <div className="h-1.5 w-12 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.min((count / limit) * 100, 100)}%`,
+                      background:
+                        count >= limit
+                          ? '#ef4444'
+                          : count >= limit * 0.8
+                            ? '#f59e0b'
+                            : '#12b76a',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+            <TopBarActions
+              onExport={() => setExportOpen(true)}
+              user={user ? { email: user.email } : null}
+              signOut={signOut}
+              onOpenAuth={() => setAuthOpen(true)}
+            />
+          </div>
         </div>
       </div>
 

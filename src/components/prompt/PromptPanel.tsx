@@ -7,6 +7,7 @@ import {
   type GenerateResult,
 } from '../../services/aiGenerate';
 import { CharacterSeedPanel } from '../seeds/CharacterSeedPanel';
+import { useUsage } from '../../lib/useUsage';
 
 async function urlToDataURL(url: string): Promise<string> {
   try {
@@ -81,6 +82,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
     characterSeeds,
     activeCharacterSeedId,
   } = useStore();
+  const { refresh: refreshUsage } = useUsage();
   const [messages, setMessages] = useState<
     { id: string; role: 'user' | 'ai'; text: string }[]
   >([
@@ -200,6 +202,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
     if (result.success && result.imageURL) {
       onGenerated(result.imageURL);
       setLastGeneratedURL(result.imageURL);
+      refreshUsage();
       const { currentPageId, updatePageResult } = useStore.getState();
       updatePageResult(currentPageId, result.imageURL);
       setMessages((prev) => [
@@ -210,13 +213,22 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
           text: `Done! Rendered as ${selectedStyle}. Use the prompt box to refine further.`,
         },
       ]);
+    } else if (result.error === 'LIMIT_REACHED') {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `${Date.now()}-limit`,
+          role: 'ai' as const,
+          text: '🚫 You have used all 10 free generations this month. Upgrade to Starter ($15/mo) for 80 generations, unlimited refinements, and no watermarks.',
+        },
+      ]);
     } else {
       setMessages((prev) => [
         ...prev,
         {
           id: `${Date.now()}-err`,
           role: 'ai' as const,
-          text: result.error ?? 'Unknown error',
+          text: `Generation failed: ${result.error ?? 'Unknown error'}`,
         },
       ]);
     }

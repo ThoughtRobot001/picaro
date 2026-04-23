@@ -45,6 +45,37 @@ serve(async (req) => {
       });
     }
 
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const FREE_TIER_LIMIT = 10;
+
+    const { data: usageData } = await adminClient
+      .from('usage')
+      .select('generation_count')
+      .eq('user_id', user.id)
+      .eq('month', monthKey)
+      .maybeSingle();
+
+    const currentCount = usageData?.generation_count ?? 0;
+
+    if (currentCount >= FREE_TIER_LIMIT) {
+      return new Response(
+        JSON.stringify({
+          error: 'LIMIT_REACHED',
+          message: `You have used all ${FREE_TIER_LIMIT} free generations this month. Upgrade to continue.`,
+          count: currentCount,
+          limit: FREE_TIER_LIMIT,
+        }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
+
     const body = await req.json();
     const { model, input, saveToStorage = true } = body;
 
@@ -153,6 +184,20 @@ serve(async (req) => {
         console.error('Storage error:', storageErr);
       }
     }
+
+    await adminClient
+      .from('usage')
+      .upsert(
+        {
+          user_id: user.id,
+          month: monthKey,
+          generation_count: currentCount + 1,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,month' }
+      );
+
+    console.log(`User ${user.id} usage: ${currentCount + 1}/${FREE_TIER_LIMIT}`);
 
     return new Response(JSON.stringify({ success: true, imageURL: permanentURL }), {
       status: 200,
