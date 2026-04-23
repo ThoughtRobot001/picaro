@@ -9,7 +9,6 @@ import {
 import { CharacterSeedPanel } from '../seeds/CharacterSeedPanel';
 import { useUsage } from '../../lib/useUsage';
 import { saveIteration, loadIterations } from '../../services/database';
-import { useDatabase } from '../../lib/useDatabase';
 import { useAuth } from '../../lib/useAuth';
 
 async function urlToDataURL(url: string): Promise<string> {
@@ -73,7 +72,6 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
     activeCharacterSeedId,
     currentPageId,
   } = useStore();
-  const { projectId } = useDatabase();
   const { user } = useAuth();
   const { refresh: refreshUsage } = useUsage();
   const [iterations, setIterations] = useState<Iteration[]>([]);
@@ -88,8 +86,8 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
   const processSteps = getProcessSteps(!!activeSeed);
 
   useEffect(() => {
-    if (!projectId || !user) return;
-    loadIterations(projectId, currentPageId)
+    if (!currentProjectId || !user) return;
+    loadIterations(currentProjectId, currentPageId)
       .then((dbIterations) => {
         if (dbIterations.length > 0) {
           setIterations(
@@ -111,7 +109,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
           setLastGeneratedURL(null);
         }
       });
-  }, [currentPageId, projectId, user]);
+  }, [currentPageId, currentProjectId, user]);
 
   useEffect(() => {
     setErrorMsg(null);
@@ -220,14 +218,14 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
             id: Date.now().toString(),
             step: stepLabel,
             prompt: userPrompt || (isRefinement ? 'Refinement' : 'Initial Generation'),
-            thumbnailUrl: result.imageURL,
+            thumbnailUrl: result.imageURL ?? null,
             isRefinement,
             isActive: true,
           }
         ];
       });
 
-      if (projectId && user) {
+      if (currentProjectId && user) {
         const isRefinement = mode === 'refine';
         const stepLabel = isRefinement 
           ? `Step ${iterations.length - iterations.filter(i => i.isRefinement).length}.${iterations.filter(i => i.isRefinement).length + 1}` 
@@ -243,7 +241,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
         };
         saveIteration(
           user.id,
-          projectId,
+          currentProjectId,
           currentPageId,
           newIteration
         );
@@ -276,10 +274,10 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
     const { currentPageId, updatePageResult } = useStore.getState();
     updatePageResult(currentPageId, iter.thumbnailUrl);
 
-    if (projectId && user) {
+    if (currentProjectId && user) {
       await saveIteration(
         user.id,
-        projectId,
+        currentProjectId,
         currentPageId,
         { ...iter, isActive: true }
       );
