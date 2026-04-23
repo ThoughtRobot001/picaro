@@ -144,11 +144,32 @@ export async function deletePage(
   projectId: string,
   pageNumber: number
 ): Promise<void> {
-  await supabase
+  const { error } = await supabase
     .from('pages')
     .delete()
     .eq('project_id', projectId)
     .eq('page_number', pageNumber);
+
+  if (error) {
+    console.error('Error deleting page:', error);
+    throw error;
+  }
+}
+
+export async function deletePageIterations(
+  projectId: string,
+  pageNumber: number
+): Promise<void> {
+  const { error } = await supabase
+    .from('iterations')
+    .delete()
+    .eq('project_id', projectId)
+    .eq('page_number', pageNumber);
+
+  if (error) {
+    console.error('Error deleting iterations:', error);
+    throw error;
+  }
 }
 
 export async function saveCharacterSeed(
@@ -303,15 +324,4 @@ export async function loadIterations(
     return [];
   }
   return data ?? [];
-}
-
-export async function deletePageIterations(
-  projectId: string,
-  pageNumber: number
-): Promise<void> {
-  await supabase
-    .from('iterations')
-    .delete()
-    .eq('project_id', projectId)
-    .eq('page_number', pageNumber);
 }
