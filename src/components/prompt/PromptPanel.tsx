@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, X } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import {
   generateFromSketch,
@@ -28,6 +28,7 @@ interface PromptPanelProps {
   onGenerated: (url: string) => void;
   selectedStyle: string;
   currentGeneratedImageURL: string | null;
+  currentProjectId: string | null;
 }
 
 const getProcessSteps = (hasSeed: boolean) =>
@@ -72,6 +73,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
   onGenerated,
   selectedStyle,
   currentGeneratedImageURL,
+  currentProjectId,
 }) => {
   const {
     isGenerating,
@@ -100,6 +102,38 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    setMessages([
+      {
+        id: '1',
+        role: 'ai',
+        text: 'Draw something on the canvas, then click Generate to render it.',
+      },
+    ]);
+    setText('');
+    setProcStep(0);
+    setLastGeneratedURL(null);
+  }, [currentProjectId]);
+
+  useEffect(() => {
+    const handleGenerateShortcut = () => {
+      if (isGenerating) return;
+      void handleGenerate();
+    };
+
+    window.addEventListener(
+      'picaro:generate-from-sketch',
+      handleGenerateShortcut
+    );
+
+    return () => {
+      window.removeEventListener(
+        'picaro:generate-from-sketch',
+        handleGenerateShortcut
+      );
+    };
+  }, [isGenerating]);
 
   const runGeneration = async (
     userPrompt: string,
@@ -206,16 +240,16 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
   };
 
   return (
-    <div className="picaro-panel-right relative flex h-full w-[320px] shrink-0 flex-col rounded-t-[24px] rounded-b-none border border-b-0 border-white/[0.08] bg-[#0b0b0d] shadow-[var(--picaro-elev-2)] overflow-hidden">
-      <div className="shrink-0 border-b border-white/[0.06] px-5 py-5 bg-[#0a0a0c]">
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 block mb-3">
+    <div className="picaro-panel-right relative flex h-full w-[340px] shrink-0 flex-col rounded-t-[24px] rounded-b-none border border-b-0 border-white/[0.08] bg-[#0b0b0d] shadow-[var(--picaro-elev-2)] overflow-hidden">
+      <div className="shrink-0 border-b border-white/[0.06] px-6 py-6 bg-[#0a0a0c]">
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30 block mb-3.5">
           Main Command
         </span>
         <button
           type="button"
           disabled={isGenerating}
           onClick={handleGenerate}
-          className="group relative flex h-[52px] w-full flex-col items-center justify-center rounded-[12px] bg-white text-black transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-100 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+          className="group relative flex h-[56px] w-full flex-col items-center justify-center rounded-[16px] bg-white text-black transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-100 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
         >
           {isGenerating ? (
             <div className="flex items-center gap-2">
@@ -256,15 +290,16 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
               type="button"
               onClick={() => useStore.getState().setActiveCharacterSeed(null)}
               className="text-emerald-400/60 hover:text-emerald-400 transition-colors"
+              aria-label="Clear active seed"
             >
-              ?
+              <X size={14} />
             </button>
           </div>
         )}
       </div>
 
       {procStep > 0 && (
-        <div className="shrink-0 border-b border-white/[0.06] px-5 py-4 bg-[#0a0a0c]/50">
+        <div className="shrink-0 border-b border-white/[0.06] px-6 py-4 bg-[#0a0a0c]/50">
           <div className="mb-3 flex items-center justify-between">
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40 font-bold">
               Process
@@ -287,54 +322,63 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-5 [scrollbar-width:thin]">
-        {messages.map((m) => (
-          <ChatMessage key={m.id} role={m.role} text={m.text} />
-        ))}
-        <div ref={messagesEndRef} className="h-2 shrink-0" />
-      </div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-width:thin]">
+        <div className="shrink-0 px-6 py-6 bg-[#0a0a0c]/40">
+          <CharacterSeedPanel
+            currentGeneratedImageURL={currentGeneratedImageURL}
+          />
+        </div>
 
-      <div className="shrink-0 border-t border-white/[0.06] px-5 py-4">
-        <CharacterSeedPanel
-          currentGeneratedImageURL={currentGeneratedImageURL}
-        />
-      </div>
+        <div className="mt-auto shrink-0 border-t border-white/[0.06] px-6 py-6 bg-[#0a0a0c]">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
+                Refinement Prompt
+              </span>
+              <span className="text-[10px] font-mono text-white/20">
+                {text.length}/2000
+              </span>
+            </div>
 
-      <div className="shrink-0 border-t border-white/[0.06] px-5 py-4 bg-[#0a0a0c]">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-white/40">
-              Refinement Prompt
-            </span>
-            <span className="text-[9px] font-mono text-white/20">
-              {text.length}/2000
-            </span>
-          </div>
-
-          <div className="relative">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder="E.g., Make it look like a pencil sketch..."
-              rows={3}
-              className="w-full resize-none rounded-[12px] border border-white/5 bg-white/[0.02] px-3.5 py-3 text-[13px] leading-5 text-white/90 placeholder-white/30 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all"
-            />
-            <button
-              type="button"
-              disabled={!text.trim() || isGenerating}
-              onClick={handleSend}
-              className="absolute bottom-2 right-2 rounded-[8px] bg-white/10 px-3 py-1.5 text-[11px] font-medium text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
-            >
-              Send
-            </button>
+            <div className="relative">
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    handleGenerate();
+                    return;
+                  }
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder="E.g., Make it look like a pencil sketch..."
+                rows={3}
+                className="w-full resize-none rounded-[16px] border border-white/5 bg-white/[0.02] px-4 py-3.5 text-[13px] leading-relaxed text-white/90 placeholder-white/30 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all"
+              />
+              <button
+                type="button"
+                disabled={!text.trim() || isGenerating}
+                onClick={handleSend}
+                className="absolute bottom-2.5 right-2.5 rounded-[10px] bg-white/10 px-3.5 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                Send
+              </button>
+            </div>
           </div>
         </div>
+
+        {messages.length > 0 && (
+          <div className="flex flex-col shrink-0 gap-4 px-6 py-6 border-t border-white/[0.06] bg-[#0b0b0d]">
+            {messages.map((m) => (
+              <ChatMessage key={m.id} role={m.role} text={m.text} />
+            ))}
+            <div ref={messagesEndRef} className="h-2 shrink-0" />
+          </div>
+        )}
       </div>
     </div>
   );

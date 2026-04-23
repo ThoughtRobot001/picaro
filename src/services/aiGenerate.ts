@@ -140,10 +140,6 @@ async function callEdgeFunction(
   }
 
   try {
-    console.log('Edge function URL:', EDGE_FUNCTION_URL);
-    console.log('Session token exists:', !!session.access_token);
-    console.log('Token preview:', session.access_token?.slice(0, 20));
-
     const response = await fetch(EDGE_FUNCTION_URL, {
       method: 'POST',
       headers: {
@@ -153,16 +149,18 @@ async function callEdgeFunction(
       body: JSON.stringify({ model, input }),
     });
 
-    console.log('Edge function response status:', response.status);
-    console.log('Edge function response headers:', 
-      Object.fromEntries(response.headers.entries()));
-
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Edge function error body:', errorText);
+      let errorMessage = `Error: ${response.status}`;
+      try {
+        const err = await response.json();
+        errorMessage = err.error || err.message || errorMessage;
+      } catch {
+        const errorText = await response.text();
+        if (errorText) errorMessage = errorText;
+      }
       return {
         success: false,
-        error: errorText || `Error: ${response.status}`,
+        error: errorMessage,
       };
     }
 
@@ -216,7 +214,6 @@ export async function generateFromSketch(
 ): Promise<GenerateResult> {
   const { sketchDataURL, prompt, style } = options;
   const fullPrompt = await buildPrompt(sketchDataURL, style, prompt);
-  console.log('Prompt:', fullPrompt);
 
   return callEdgeFunction('flux-kontext-pro', {
     prompt: fullPrompt,
@@ -256,7 +253,6 @@ export async function flux2GenerateWithSeed(
   ];
   if (userPrompt.trim()) promptParts.push(userPrompt.trim());
   const fullPrompt = promptParts.join('. ') + '.';
-  console.log('FLUX.2 prompt:', fullPrompt);
 
   return callEdgeFunction('flux-2-pro', {
     prompt: fullPrompt,

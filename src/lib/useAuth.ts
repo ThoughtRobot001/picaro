@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useStore } from '../store/useStore';
 import { supabase, User } from './supabase';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const resetStore = useStore((state) => state.resetStore);
 
   useEffect(() => {
     // Get initial session
@@ -24,6 +26,8 @@ export function useAuth() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    resetStore();
+    localStorage.removeItem('picaro-store');
   };
 
   return { user, loading, signOut };

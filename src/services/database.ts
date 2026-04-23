@@ -1,31 +1,86 @@
 import { supabase } from '../lib/supabase';
 
-export async function getOrCreateProject(
+export interface ProjectSummary {
+  id: string;
+  title: string;
+  updated_at: string;
+}
+
+export async function getProjectById(
   userId: string,
-  title: string = 'Untitled Art'
-): Promise<string | null> {
-  const { data } = await supabase
+  projectId: string
+): Promise<ProjectSummary | null> {
+  const { data, error } = await supabase
     .from('projects')
-    .select('id')
+    .select('id, title, updated_at')
     .eq('user_id', userId)
-    .order('updated_at', { ascending: false })
-    .limit(1)
+    .eq('id', projectId)
     .maybeSingle();
 
-  if (data) return data.id;
-
-  const { data: newProject, error: createError } = await supabase
-    .from('projects')
-    .insert({ user_id: userId, title })
-    .select('id')
-    .single();
-
-  if (createError) {
-    console.error('Error creating project:', createError);
+  if (error) {
+    console.error('Error loading project:', error);
     return null;
   }
 
-  return newProject.id;
+  return data;
+}
+
+export async function listProjects(
+  userId: string
+): Promise<ProjectSummary[]> {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('id, title, updated_at')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    console.error('Error loading projects:', error);
+    return [];
+  }
+
+  return data ?? [];
+}
+
+export async function createProject(
+  userId: string,
+  title: string = 'Untitled Art'
+): Promise<ProjectSummary | null> {
+  const { data, error } = await supabase
+    .from('projects')
+    .insert({ user_id: userId, title })
+    .select('id, title, updated_at')
+    .single();
+
+  if (error) {
+    console.error('Error creating project:', error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function getOrCreateProject(
+  userId: string,
+  preferredProjectId: string | null = null,
+  title: string = 'Untitled Art'
+): Promise<ProjectSummary | null> {
+  if (preferredProjectId) {
+    const preferredProject = await getProjectById(
+      userId,
+      preferredProjectId
+    );
+    if (preferredProject) {
+      return preferredProject;
+    }
+  }
+
+  const existingProjects = await listProjects(userId);
+  if (existingProjects.length > 0) {
+    return existingProjects[0];
+  }
+
+  return createProject(userId, title);
 }
 
 export async function updateProjectTitle(
@@ -100,7 +155,7 @@ export async function saveCharacterSeed(
   userId: string,
   name: string,
   imageBase64: string
-): Promise<string | null> {
+): Promise<{ id: string; imageURL: string } | null> {
   const filename = `${userId}/seeds/${Date.now()}.png`;
 
   const base64Data = imageBase64.split(',')[1];
@@ -149,7 +204,10 @@ export async function saveCharacterSeed(
     return null;
   }
 
-  return data.id;
+  return {
+    id: data.id,
+    imageURL,
+  };
 }
 
 export async function loadCharacterSeeds(

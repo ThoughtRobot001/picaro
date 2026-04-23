@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Plus, Trash2, Upload, Check, X } from 'lucide-react';
+import { Plus, Trash2, Upload, Check, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { useDatabase } from '../../lib/useDatabase';
 
@@ -36,10 +36,13 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
 }) => {
   const {
     characterSeeds,
+    projectSeedIds,
     activeCharacterSeedId,
     maxSeeds,
     addCharacterSeed,
     removeCharacterSeed,
+    addProjectSeed,
+    removeProjectSeed,
     setActiveCharacterSeed,
   } = useStore();
   const { saveSeedToDatabase, deleteSeedFromDatabase } = useDatabase();
@@ -52,8 +55,15 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
   const [nameInput, setNameInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   const atLimit = characterSeeds.length >= maxSeeds;
+  const usedInProjectSeeds = characterSeeds.filter((seed) =>
+    projectSeedIds.includes(seed.id)
+  );
+  const librarySeeds = characterSeeds.filter(
+    (seed) => !projectSeedIds.includes(seed.id)
+  );
 
   const handleSaveGenerated = async () => {
     if (!currentGeneratedImageURL) return;
@@ -112,23 +122,26 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
     setError(null);
 
     try {
-      const remoteSeedId = await saveSeedToDatabase(name, namingState.imageBase64);
+      const savedSeed = await saveSeedToDatabase(name, namingState.imageBase64);
 
-      if (remoteSeedId) {
+      if (savedSeed) {
         useStore.setState((state) => ({
           ...state,
           characterSeeds: [
             {
-              id: remoteSeedId,
+              id: savedSeed.id,
               name,
-              imageBase64: namingState.imageBase64,
-              thumbnail: namingState.imageBase64,
+              imageBase64: savedSeed.imageURL,
+              thumbnail: savedSeed.imageURL,
               createdAt: Date.now(),
-            },
-            ...state.characterSeeds.filter((seed) => seed.id !== remoteSeedId),
-          ],
-          activeCharacterSeedId: remoteSeedId,
-        }));
+              },
+              ...state.characterSeeds.filter((seed) => seed.id !== savedSeed.id),
+            ],
+            projectSeedIds: state.projectSeedIds.includes(savedSeed.id)
+              ? state.projectSeedIds
+              : [...state.projectSeedIds, savedSeed.id],
+            activeCharacterSeedId: savedSeed.id,
+          }));
       } else {
         const result = addCharacterSeed(name, namingState.imageBase64);
         if (!result.success) {
@@ -159,12 +172,12 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-500">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/40">
           Character Seeds
         </span>
-        <span className="text-[10px] text-neutral-600">
+        <span className="text-[10px] font-medium text-white/30">
           {characterSeeds.length}/{maxSeeds}
         </span>
       </div>
@@ -218,67 +231,159 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/30">
+            Used in this project
+          </span>
+          <span className="text-[10px] font-medium text-white/30 bg-white/5 px-2 py-0.5 rounded-full">
+            {usedInProjectSeeds.length}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <button
+            type="button"
+            onClick={() => setActiveCharacterSeed(null)}
+            className={`flex flex-col items-center justify-center aspect-square rounded-[12px] border text-[11px] font-medium transition-all ${
+              activeCharacterSeedId === null
+                ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                : 'border-white/10 bg-white/[0.02] text-white/40 hover:bg-white/[0.04] hover:text-white/60 hover:border-white/20'
+            }`}
+          >
+            <span className="text-xl leading-none mb-1.5 opacity-80">✦</span>
+            <span>None</span>
+          </button>
+
+          {usedInProjectSeeds.length === 0 && (
+            <div className="col-span-2 flex min-h-[92px] items-center justify-center rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-3 text-center text-[10px] text-white/35">
+              No seeds in use yet.
+            </div>
+          )}
+
+          {usedInProjectSeeds.map((seed) => (
+            <div
+              key={seed.id}
+              className={`relative aspect-square rounded-[12px] border overflow-hidden cursor-pointer transition-all group ${
+                activeCharacterSeedId === seed.id
+                  ? 'border-emerald-500/70 ring-2 ring-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                  : 'border-white/10 hover:border-white/20 hover:shadow-lg'
+              }`}
+              onClick={() =>
+                setActiveCharacterSeed(
+                  activeCharacterSeedId === seed.id ? null : seed.id
+                )
+              }
+            >
+              <img
+                src={seed.thumbnail}
+                alt={seed.name}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-6 pb-2 px-2.5">
+                <p className="text-[10px] font-medium text-white/90 truncate drop-shadow-md">
+                  {seed.name}
+                </p>
+              </div>
+              {activeCharacterSeedId === seed.id && (
+                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                  <Check size={9} className="text-white" />
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeProjectSeed(seed.id);
+                }}
+                className="absolute top-1 left-1 flex h-5 w-5 items-center justify-center rounded-md bg-black/60 opacity-0 transition-opacity hover:bg-white/20 group-hover:opacity-100"
+                title="Remove from this project"
+              >
+                <X size={9} className="text-white" />
+              </button>
+            </div>
+          ))}
+        </div>
+
         <button
           type="button"
-          onClick={() => setActiveCharacterSeed(null)}
-          className={`flex flex-col items-center justify-center aspect-square rounded-lg border text-[10px] transition-all ${
-            activeCharacterSeedId === null
-              ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-              : 'border-white/10 bg-white/[0.02] text-neutral-500 hover:bg-white/[0.04]'
-          }`}
+          onClick={() => setIsLibraryOpen(!isLibraryOpen)}
+          className="flex w-full items-center justify-between pt-4 border-t border-white/[0.04] hover:opacity-80 transition-opacity group"
         >
-          <span className="text-lg leading-none mb-0.5">*</span>
-          <span>None</span>
+          <div className="flex items-center gap-2">
+            <ChevronDown
+              size={14}
+              className={`text-white/40 transition-transform duration-200 ${
+                isLibraryOpen ? '' : '-rotate-90'
+              }`}
+            />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/30 group-hover:text-white/50 transition-colors">
+              Your Library
+            </span>
+          </div>
+          <span className="text-[10px] font-medium text-white/30 bg-white/5 px-2 py-0.5 rounded-full">
+            {librarySeeds.length}
+          </span>
         </button>
 
-        {characterSeeds.map((seed) => (
-          <div
-            key={seed.id}
-            className={`relative aspect-square rounded-lg border overflow-hidden cursor-pointer transition-all group ${
-              activeCharacterSeedId === seed.id
-                ? 'border-emerald-500/70 ring-1 ring-emerald-500/40'
-                : 'border-white/10 hover:border-white/20'
-            }`}
-            onClick={() => setActiveCharacterSeed(activeCharacterSeedId === seed.id ? null : seed.id)}
-          >
-            <img
-              src={seed.thumbnail}
-              alt={seed.name}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
-              <p className="text-[9px] text-white/80 truncate leading-tight">
-                {seed.name}
-              </p>
+        {isLibraryOpen && (
+          <>
+            <div className="grid grid-cols-3 gap-3">
+              {librarySeeds.map((seed) => (
+                <div
+                  key={seed.id}
+                  className="relative aspect-square rounded-[12px] border border-white/10 overflow-hidden cursor-pointer transition-all group hover:border-white/30 hover:shadow-lg"
+                  onClick={() => {
+                    addProjectSeed(seed.id);
+                    setActiveCharacterSeed(seed.id);
+                  }}
+                >
+                  <img
+                    src={seed.thumbnail}
+                    alt={seed.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-70 group-hover:opacity-100"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-6 pb-2 px-2.5">
+                    <p className="text-[10px] font-medium text-white/90 truncate drop-shadow-md">
+                      {seed.name}
+                    </p>
+                  </div>
+                  <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/45 to-transparent px-1.5 py-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <span className="inline-flex rounded bg-black/60 px-1.5 py-0.5 text-[8px] uppercase tracking-[0.14em] text-white/80">
+                      Use here
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handleDeleteSeed(seed.id);
+                    }}
+                    className="absolute top-1 left-1 w-5 h-5 rounded-md bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/60"
+                  >
+                    <Trash2 size={9} className="text-white" />
+                  </button>
+                </div>
+              ))}
             </div>
-            {activeCharacterSeedId === seed.id && (
-              <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
-                <Check size={9} className="text-white" />
-              </div>
+
+            {librarySeeds.length === 0 && characterSeeds.length === 0 && (
+              <p className="rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-3 py-4 text-center text-[10px] text-white/35">
+                Your saved seeds will appear here.
+              </p>
             )}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                void handleDeleteSeed(seed.id);
-              }}
-              className="absolute top-1 left-1 w-5 h-5 rounded-md bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/60"
-            >
-              <Trash2 size={9} className="text-white" />
-            </button>
-          </div>
-        ))}
+          </>
+        )}
       </div>
 
-      <div className="flex gap-1.5">
+      <div className="flex gap-2.5 pt-3 border-t border-white/[0.04]">
         <button
           type="button"
           disabled={!currentGeneratedImageURL || saving || atLimit}
           onClick={handleSaveGenerated}
-          className="flex-1 flex items-center justify-center gap-1.5 h-7 rounded-md border border-white/10 bg-white/[0.03] text-[11px] text-white/50 hover:bg-white/[0.06] hover:text-white/70 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-[12px] border border-white/10 bg-white/[0.03] text-[12px] font-medium text-white/60 hover:bg-white/[0.08] hover:text-white/90 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
         >
-          <Plus size={11} />
+          <Plus size={14} />
           {saving ? 'Saving...' : 'Save current'}
         </button>
 
@@ -286,9 +391,9 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
           type="button"
           disabled={atLimit}
           onClick={() => fileInputRef.current?.click()}
-          className="flex-1 flex items-center justify-center gap-1.5 h-7 rounded-md border border-white/10 bg-white/[0.03] text-[11px] text-white/50 hover:bg-white/[0.06] hover:text-white/70 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-[12px] border border-white/10 bg-white/[0.03] text-[12px] font-medium text-white/60 hover:bg-white/[0.08] hover:text-white/90 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
         >
-          <Upload size={11} />
+          <Upload size={14} />
           Upload
         </button>
       </div>

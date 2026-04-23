@@ -5,9 +5,9 @@ import React, {
   useCallback,
 } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useStore } from '../../store/useStore';
 
 const CANVAS_RESOLUTION = 2048;
-import { useStore } from '../../store/useStore';
 
 interface BrushControlsProps {
   openPanel: 'size' | 'opacity' | null;
@@ -35,7 +35,7 @@ const BrushControls: React.FC<BrushControlsProps> = ({ openPanel, setOpenPanel }
         />
         <div className="w-px h-3 bg-white/20 mx-1 shrink-0" />
         <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/70 pointer-events-none select-none">
-          {brushSize}px · {Math.round(brushOpacity * 100)}%
+          {brushSize}px � {Math.round(brushOpacity * 100)}%
         </span>
       </div>
     );
@@ -171,7 +171,7 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
   // Shape tool
   const shapeStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  // ── WHITE BACKGROUND HELPER ──────────────────────────
+  // White background helper
   const paintWhiteBackground = useCallback((
     ctx: CanvasRenderingContext2D,
     w: number,
@@ -185,7 +185,7 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     ctx.restore();
   }, []);
 
-  // ── EXPORT with guaranteed white background ──────────
+  // Export with guaranteed white background
   const exportCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -203,7 +203,7 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     onExport?.(dataURL);
   }, [currentPageId, updatePageCanvas, onExport]);
 
-  // ── HISTORY ──────────────────────────────────────────
+  // History
   const saveHistory = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -257,7 +257,7 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     }
   }, [redoCounter, restoreHistoryState]);
 
-  // ── CANVAS RESIZE ────────────────────────────────────
+  // Canvas resize
   useEffect(() => {
     const resizeCanvas = () => {
       const canvas = canvasRef.current;
@@ -329,7 +329,7 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     return () => observer.disconnect();
   }, [setCanUndo, setCanRedo]);
 
-  // ── PAGE SWITCHING ───────────────────────────────────
+  // Page switching
   // When page changes, restore that page's canvas or clear to white
   const { pages } = useStore();
   useEffect(() => {
@@ -371,7 +371,7 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     }
   }, [currentPageId]);
 
-  // ── GESTURE / ZOOM ───────────────────────────────────
+  // Gesture / zoom
   const bumpGesture = useCallback(() => {
     setGestureActive(true);
     if (gestureSettleRef.current) {
@@ -382,6 +382,12 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
       gestureSettleRef.current = null;
     }, 140);
   }, []);
+
+  const resetZoom = useCallback(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+    bumpGesture();
+  }, [bumpGesture]);
 
   useEffect(() => {
     return () => {
@@ -420,7 +426,39 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     return () => el.removeEventListener('wheel', handleWheel);
   }, [bumpGesture]);
 
-  // ── HELPERS ──────────────────────────────────────────
+  useEffect(() => {
+    const handleZoomIn = () => {
+      setZoom((currentZoom) => {
+        const nextZoom = Math.min(8, currentZoom * 1.12);
+        bumpGesture();
+        return nextZoom;
+      });
+    };
+
+    const handleZoomOut = () => {
+      setZoom((currentZoom) => {
+        const nextZoom = Math.max(0.1, currentZoom * 0.9);
+        bumpGesture();
+        return nextZoom;
+      });
+    };
+
+    const handleZoomReset = () => {
+      resetZoom();
+    };
+
+    window.addEventListener('picaro:zoom-in', handleZoomIn);
+    window.addEventListener('picaro:zoom-out', handleZoomOut);
+    window.addEventListener('picaro:zoom-reset', handleZoomReset);
+
+    return () => {
+      window.removeEventListener('picaro:zoom-in', handleZoomIn);
+      window.removeEventListener('picaro:zoom-out', handleZoomOut);
+      window.removeEventListener('picaro:zoom-reset', handleZoomReset);
+    };
+  }, [bumpGesture, resetZoom]);
+
+  // Helpers
   const getCoordinates = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -892,7 +930,7 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     draw(e);
   };
 
-  // ── TEXT TEXTAREA RESIZE ─────────────────────────────
+  // Text textarea resize
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -902,7 +940,7 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     ta.style.height = `${ta.scrollHeight}px`;
   }, [textValue]);
 
-  // ── DYNAMIC CURSOR RESIZE ────────────────────────────
+  // Dynamic cursor resize
   useEffect(() => {
     if (cursorRef.current && canvasRef.current) {
       const canvasRect = canvasRef.current.getBoundingClientRect();
@@ -913,7 +951,7 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     }
   }, [brushSize, activeTool, zoom]);
 
-  // ── RENDER ───────────────────────────────────────────
+  // Render
   return (
     <div
       ref={containerRef}
@@ -1071,7 +1109,7 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
         }}
       />
 
-      {/* Zoom HUD — bottom-right to avoid overlap with BrushControls */}
+      {/* Zoom HUD - bottom-right to avoid overlap with BrushControls */}
       <div className="absolute bottom-3 right-3 z-[100] flex items-center gap-2">
         <div
           className="picaro-zoom-hud pointer-events-none"
@@ -1088,21 +1126,17 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
           <button
             type="button"
             className="picaro-focus picaro-zoom-reset"
-            onClick={() => {
-              setZoom(1);
-              setPan({ x: 0, y: 0 });
-              bumpGesture();
-            }}
+            onClick={resetZoom}
           >
             Reset
           </button>
         )}
       </div>
 
-      {/* BrushControls — bottom-left (label is inline in collapsed state) */}
+      {/* BrushControls - bottom-left (label is inline in collapsed state) */}
       <BrushControls openPanel={brushPanelOpen} setOpenPanel={setBrushPanelOpen} />
 
-      {/* INPUT SKETCH label — top-left */}
+      {/* INPUT SKETCH label - top-left */}
       <div className="absolute top-4 left-5 z-[100] pointer-events-none mix-blend-difference">
         <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-white/60">
           Input Sketch
@@ -1114,6 +1148,8 @@ export const PicaroCanvas: React.FC<PicaroCanvasProps> = ({
     </div>
   );
 };
+
+
 
 
 
