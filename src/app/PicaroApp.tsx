@@ -332,7 +332,11 @@ export default function PicaroApp() {
         window.clearTimeout(saveTimeoutRef.current);
       }
       saveTimeoutRef.current = window.setTimeout(() => {
-        void saveCurrentPage(pageNumber, canvasDataURL, aiResultURL);
+        // Guard against race condition: don't save if the page was just deleted locally
+        const pageStillExists = useStore.getState().pages.some((p) => p.id === pageNumber);
+        if (pageStillExists) {
+          void saveCurrentPage(pageNumber, canvasDataURL, aiResultURL);
+        }
         saveTimeoutRef.current = null;
       }, 600);
     },
