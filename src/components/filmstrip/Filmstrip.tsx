@@ -88,8 +88,10 @@ export const Filmstrip: React.FC<FilmstripProps> = ({ deletePageFromDatabase }) 
                       <DropdownMenu.Item
                         disabled={pages.length <= 1}
                         onSelect={(e) => {
-                          e.preventDefault();
-                          if (pages.length <= 1) return;
+                          if (pages.length <= 1) {
+                            e.preventDefault();
+                            return;
+                          }
                           setPageToDelete(page.id);
                         }}
                         className="flex cursor-pointer select-none items-center gap-2 rounded-[8px] px-2.5 py-2 text-[11px] font-medium font-mono text-red-400 outline-none transition-colors hover:bg-red-500/10 data-[disabled]:opacity-40 data-[disabled]:pointer-events-none"
