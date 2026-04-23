@@ -174,10 +174,10 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/40">
+        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30">
           Character Seeds
         </span>
-        <span className="text-[10px] font-medium text-white/30">
+        <span className="text-[9px] font-mono tracking-widest text-white/30">
           {characterSeeds.length}/{maxSeeds}
         </span>
       </div>
@@ -233,10 +233,10 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/30">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/30">
             Used in this project
           </span>
-          <span className="text-[10px] font-medium text-white/30 bg-white/5 px-2 py-0.5 rounded-full">
+          <span className="text-[9px] font-mono font-medium text-white/30 bg-white/[0.04] px-1.5 py-0.5 rounded-sm">
             {usedInProjectSeeds.length}
           </span>
         </div>
@@ -245,18 +245,18 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
           <button
             type="button"
             onClick={() => setActiveCharacterSeed(null)}
-            className={`flex flex-col items-center justify-center aspect-square rounded-[12px] border text-[11px] font-medium transition-all ${
+            className={`flex flex-col items-center justify-center aspect-square rounded-[10px] border text-[10px] font-medium transition-all ${
               activeCharacterSeedId === null
-                ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                : 'border-white/10 bg-white/[0.02] text-white/40 hover:bg-white/[0.04] hover:text-white/60 hover:border-white/20'
+                ? 'border-emerald-500/40 bg-emerald-500/[0.08] text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.12)]'
+                : 'border-white/[0.06] bg-white/[0.01] text-white/40 hover:bg-white/[0.03] hover:text-white/60 hover:border-white/[0.15]'
             }`}
           >
-            <span className="text-xl leading-none mb-1.5 opacity-80">✦</span>
-            <span>None</span>
+            <span className="text-lg leading-none mb-1 opacity-80">✦</span>
+            <span className="tracking-wide">None</span>
           </button>
 
           {usedInProjectSeeds.length === 0 && (
-            <div className="col-span-2 flex min-h-[92px] items-center justify-center rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-3 text-center text-[10px] text-white/35">
+            <div className="col-span-2 flex min-h-[88px] items-center justify-center rounded-[10px] border border-dashed border-white/[0.08] bg-white/[0.01] px-3 text-center text-[10px] text-white/30">
               No seeds in use yet.
             </div>
           )}
@@ -308,20 +308,20 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
         <button
           type="button"
           onClick={() => setIsLibraryOpen(!isLibraryOpen)}
-          className="flex w-full items-center justify-between pt-4 border-t border-white/[0.04] hover:opacity-80 transition-opacity group"
+          className="flex w-full items-center justify-between pt-4 pb-1 hover:opacity-80 transition-opacity group"
         >
           <div className="flex items-center gap-2">
             <ChevronDown
-              size={14}
-              className={`text-white/40 transition-transform duration-200 ${
+              size={12}
+              className={`text-white/30 transition-transform duration-200 ${
                 isLibraryOpen ? '' : '-rotate-90'
               }`}
             />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/30 group-hover:text-white/50 transition-colors">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/30 group-hover:text-white/50 transition-colors">
               Your Library
             </span>
           </div>
-          <span className="text-[10px] font-medium text-white/30 bg-white/5 px-2 py-0.5 rounded-full">
+          <span className="text-[9px] font-mono font-medium text-white/30 bg-white/[0.04] px-1.5 py-0.5 rounded-sm">
             {librarySeeds.length}
           </span>
         </button>
@@ -376,14 +376,14 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
         )}
       </div>
 
-      <div className="flex gap-2.5 pt-3 border-t border-white/[0.04]">
+      <div className="flex gap-2.5 pt-3 border-t border-white/[0.02]">
         <button
           type="button"
           disabled={!currentGeneratedImageURL || saving || atLimit}
           onClick={handleSaveGenerated}
-          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-[12px] border border-white/10 bg-white/[0.03] text-[12px] font-medium text-white/60 hover:bg-white/[0.08] hover:text-white/90 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+          className="flex-1 flex items-center justify-center gap-2 h-8 rounded-[8px] border border-white/[0.06] bg-white/[0.02] text-[11px] tracking-wide font-medium text-white/60 hover:bg-white/[0.06] hover:text-white/90 hover:border-white/[0.12] disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
         >
-          <Plus size={14} />
+          <Plus size={12} />
           {saving ? 'Saving...' : 'Save current'}
         </button>
 
@@ -391,9 +391,9 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
           type="button"
           disabled={atLimit}
           onClick={() => fileInputRef.current?.click()}
-          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-[12px] border border-white/10 bg-white/[0.03] text-[12px] font-medium text-white/60 hover:bg-white/[0.08] hover:text-white/90 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+          className="flex-1 flex items-center justify-center gap-2 h-8 rounded-[8px] border border-white/[0.06] bg-white/[0.02] text-[11px] tracking-wide font-medium text-white/60 hover:bg-white/[0.06] hover:text-white/90 hover:border-white/[0.12] disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
         >
-          <Upload size={14} />
+          <Upload size={12} />
           Upload
         </button>
       </div>

@@ -219,33 +219,29 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
 
   return (
     <div className="picaro-panel-right relative flex h-full w-[340px] shrink-0 flex-col rounded-t-[24px] rounded-b-none border border-b-0 border-white/[0.08] bg-[#0b0b0d] shadow-[var(--picaro-elev-2)] overflow-hidden">
-      <div className="shrink-0 border-b border-white/[0.06] px-6 py-6 bg-[#0a0a0c]">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30 block mb-3.5">
+      <div className="shrink-0 border-b border-white/[0.04] px-5 py-5 bg-[#0a0a0c]">
+        <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-white/30 block mb-3">
           Main Command
         </span>
         <button
           type="button"
           disabled={isGenerating}
           onClick={handleGenerate}
-          className="group relative flex h-[56px] w-full flex-col items-center justify-center rounded-[16px] bg-white text-black transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-100 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+          className="group relative flex h-[44px] w-full items-center justify-center gap-2 rounded-[12px] bg-white text-black transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-100 shadow-[0_4px_14px_rgba(255,255,255,0.12)] hover:shadow-[0_6px_20px_rgba(255,255,255,0.18)]"
         >
           {isGenerating ? (
-            <div className="flex items-center gap-2">
-              <Loader2 size={16} className="animate-spin text-black/80" />
-              <span className="font-['Inter'] text-[13px] font-bold tracking-tight">Generating...</span>
-            </div>
+            <>
+              <Loader2 size={14} className="animate-spin text-black/60" />
+              <span className="font-sans text-[13px] font-semibold tracking-tight">Generating...</span>
+            </>
           ) : (
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="flex items-center gap-1.5">
-                <Sparkles size={14} className="text-black/70" />
-                <span className="font-['Inter'] text-[13px] font-bold tracking-tight">
-                  GENERATE FROM SKETCH
-                </span>
+            <>
+              <Sparkles size={14} className="text-black/60" />
+              <span className="font-sans text-[13px] font-semibold tracking-tight">Generate from Sketch</span>
+              <div className="ml-1 flex items-center justify-center rounded px-1.5 py-0.5 bg-black/5 text-[9px] font-mono font-bold tracking-widest text-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                ⌘↵
               </div>
-              <span className="font-mono text-[8px] font-bold uppercase tracking-[0.2em] text-black/40">
-                CMD + ENTER
-              </span>
-            </div>
+            </>
           )}
         </button>
 
@@ -301,7 +297,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
       )}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-width:thin]">
-        <div className="shrink-0 px-6 py-6 bg-[#0a0a0c]/40">
+        <div className="shrink-0 px-5 py-5 bg-[#0a0a0c]/40">
           <CharacterSeedPanel
             currentGeneratedImageURL={currentGeneratedImageURL}
           />
@@ -362,17 +358,17 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
           <button 
             type="button"
             onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-            className="w-full h-8 flex items-center justify-center gap-2 border-t border-b border-white/[0.04] bg-[#0a0a0c] hover:bg-white/[0.02] transition-colors cursor-pointer"
+            className="relative w-full h-9 flex items-center justify-center gap-2 border-t border-white/[0.04] bg-[#0a0a0c] hover:bg-[#0d0d10] transition-colors cursor-pointer group"
           >
-             <ChevronUp size={12} className={`text-white/30 transition-transform duration-300 ${isDrawerOpen ? 'rotate-180' : ''}`} />
-             <span className="text-[10px] text-white/30 font-mono tracking-widest uppercase">
+             <ChevronUp size={12} className={`text-white/30 group-hover:text-white/50 transition-all duration-300 ${isDrawerOpen ? 'rotate-180' : ''}`} />
+             <span className="text-[9px] text-white/30 group-hover:text-white/50 font-mono tracking-[0.15em] uppercase font-medium transition-colors">
                 {iterations.length} iterations • {iterations.filter(i => i.isRefinement).length > 0 ? '1 branch' : '0 branches'}
              </span>
           </button>
-          <div className="px-6 py-6">
+          <div className="px-5 py-5 bg-[#0d0d10] border-t border-white/[0.02]">
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
+                <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-white/30">
                   Refinement Prompt
                 </span>
                 <span className="text-[10px] font-mono text-white/20">
