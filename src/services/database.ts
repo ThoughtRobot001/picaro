@@ -311,10 +311,7 @@ export async function loadIterations(
 }>> {
   const { data, error } = await supabase
     .from('iterations')
-    .select(
-      'id, step, prompt, thumbnail_url, ' +
-      'is_refinement, is_active'
-    )
+    .select('id, step, prompt, thumbnail_url, is_refinement, is_active')
     .eq('project_id', projectId)
     .eq('page_number', pageNumber)
     .order('created_at', { ascending: true });
@@ -323,5 +320,5 @@ export async function loadIterations(
     console.error('Error loading iterations:', error);
     return [];
   }
-  return data ?? [];
+  return (data as any) ?? [];
 }
