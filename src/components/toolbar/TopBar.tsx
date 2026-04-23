@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Redo2, Pencil, Plus, Share2, Undo2, ChevronDown, Check, LogOut, User as UserIcon, FolderPlus, Sparkles, X, Trash2 } from 'lucide-react';
+import { Redo2, Pencil, Plus, Share2, Undo2, ChevronDown, Check, LogOut, User as UserIcon, FolderPlus, Sparkles, X, Trash2, MoreVertical } from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useStore } from '../../store/useStore';
 import { ExportModal } from '../export/ExportModal';
 import { AuthModal } from '../auth/AuthModal';
@@ -176,17 +177,35 @@ const ProjectDropdown: React.FC<{
                     )}
                     <span className="truncate pr-6">{p.title || `Project ${i + 1}`}</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsOpen(false);
-                      setProjectToDelete(p.id);
-                    }}
-                    className="absolute right-2 opacity-0 group-hover:opacity-100 flex h-6 w-6 items-center justify-center rounded-md text-red-400/70 hover:bg-red-500/10 hover:text-red-400 transition-all"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger asChild>
+                      <button
+                        type="button"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-2 opacity-40 group-hover:opacity-100 flex h-6 w-6 items-center justify-center rounded-md text-white/50 hover:bg-white/10 hover:text-white transition-all z-10"
+                      >
+                        <MoreVertical size={13} />
+                      </button>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Portal>
+                      <DropdownMenu.Content
+                        align="end"
+                        sideOffset={4}
+                        className="z-[200] min-w-[140px] rounded-xl border border-white/[0.08] bg-[#0f0f13] p-1.5 shadow-2xl animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95"
+                      >
+                        <DropdownMenu.Item
+                          onSelect={(e) => {
+                            setIsOpen(false);
+                            setProjectToDelete(p.id);
+                          }}
+                          className="flex cursor-pointer select-none items-center gap-2 rounded-[8px] px-2.5 py-2 text-[11px] font-medium font-mono text-red-400 outline-none transition-colors hover:bg-red-500/10"
+                        >
+                          <Trash2 size={12} />
+                          Delete Project
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Portal>
+                  </DropdownMenu.Root>
                 </div>
               ))}
             </div>
