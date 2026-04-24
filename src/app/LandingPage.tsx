@@ -370,10 +370,23 @@ export default function LandingPage() {
 
   return (
     <div 
-      className="min-h-screen bg-[#050506] text-white"
+      className="min-h-screen bg-[#050506] text-white relative"
       style={{ fontFamily: 'Inter, sans-serif' }}
     >
-      {/* ── NAV ─────────────────────────────────────── */}
+      {/* ── BACKGROUND VIDEO ────────────────────────── */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="fixed inset-0 w-full h-full object-cover z-0 opacity-20"
+      >
+        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_115655_b4d9cd77-feed-43cd-a198-af78ebdf1f7a.mp4" type="video/mp4" />
+      </video>
+      <div className="fixed inset-0 bg-[#050506]/80 z-0 pointer-events-none" />
+
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* ── NAV ─────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 border-b border-white/[0.06] bg-[#050506]/80 backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[15px] font-bold tracking-tight text-white">
@@ -891,6 +904,7 @@ export default function LandingPage() {
           </p>
         </div>
       </footer>
+      </div>
 
       {/* Auth Modal */}
       <AuthModal
