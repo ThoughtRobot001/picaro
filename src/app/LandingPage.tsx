@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { AuthModal } from '../components/auth/AuthModal';
 import { useAuth } from '../lib/useAuth';
+import { motion } from 'motion/react';
 
 // ─── GUEST TOKEN ──────────────────────────────────────
 function getGuestToken(): string {
@@ -410,7 +411,12 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           
           {/* Headline */}
-          <div className="text-center mb-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="text-center mb-12"
+          >
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 mb-6">
               <Sparkles size={12} className="text-emerald-500" />
               <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">
@@ -435,10 +441,15 @@ export default function LandingPage() {
               your sketch into professional artwork in seconds. 
               No art skills required.
             </p>
-          </div>
+          </motion.div>
 
           {/* Interactive Demo */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto"
+          >
             
             {/* Left — Canvas */}
             <div className="flex flex-col gap-3">
@@ -621,20 +632,43 @@ export default function LandingPage() {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* ── HOW IT WORKS ────────────────────────────── */}
       <section className="py-20 px-6 border-t border-white/[0.06]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-3">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            className="text-3xl font-bold mb-3"
+          >
             How it works
-          </h2>
-          <p className="text-white/30 mb-12 text-[15px]">
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ delay: 0.1 }}
+            className="text-white/30 mb-12 text-[15px]"
+          >
             From rough sketch to finished art in three steps
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          </motion.p>
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.15 }
+              }
+            }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
             {[
               {
                 step: '01',
@@ -655,8 +689,12 @@ export default function LandingPage() {
                 icon: Zap,
               },
             ].map((item) => (
-              <div
+              <motion.div
                 key={item.step}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 }
+                }}
                 className="flex flex-col items-center text-center p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02]"
               >
                 <div className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center mb-4"
@@ -673,16 +711,22 @@ export default function LandingPage() {
                 <p className="text-white/40 text-[13px] leading-relaxed">
                   {item.desc}
                 </p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* ── COMING SOON — LAYERS ────────────────────── */}
       <section className="py-20 px-6 border-t border-white/[0.06]">
         <div className="max-w-4xl mx-auto">
-          <div className="relative rounded-2xl border border-amber-500/20 bg-amber-500/5 p-8 md:p-12 overflow-hidden">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.5 }}
+            className="relative rounded-2xl border border-amber-500/20 bg-amber-500/5 p-8 md:p-12 overflow-hidden"
+          >
             <div className="absolute top-4 right-4">
               <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider border border-amber-500/30 text-amber-400">
                 Coming Soon
@@ -741,21 +785,45 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* ── PRICING ─────────────────────────────────── */}
       <section className="py-20 px-6 border-t border-white/[0.06]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-3">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            className="text-3xl font-bold mb-3"
+          >
             Simple pricing
-          </h2>
-          <p className="text-white/30 mb-12 text-[15px]">
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ delay: 0.1 }}
+            className="text-white/30 mb-12 text-[15px]"
+          >
             Start free. Upgrade when you need more.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <PricingCard
+          </motion.p>
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.15 }
+              }
+            }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+              <PricingCard
               name="Free"
               price="Free"
               description="Try it out"
@@ -767,8 +835,10 @@ export default function LandingPage() {
               ]}
               cta="Get Started Free"
               onCTA={() => setAuthOpen(true)}
-            />
-            <PricingCard
+              />
+            </motion.div>
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+              <PricingCard
               name="Starter"
               price="$15"
               description="For regular creators"
@@ -785,8 +855,10 @@ export default function LandingPage() {
               highlighted
               cta="Start Creating"
               onCTA={() => setAuthOpen(true)}
-            />
-            <PricingCard
+              />
+            </motion.div>
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+              <PricingCard
               name="Creator"
               price="$35"
               description="For power users"
@@ -802,10 +874,10 @@ export default function LandingPage() {
                 'Seed strength control',
                 'API access',
               ]}
-              cta="Go Pro"
               onCTA={() => setAuthOpen(true)}
-            />
-          </div>
+              />
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
