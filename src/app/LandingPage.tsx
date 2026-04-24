@@ -571,12 +571,6 @@ export default function LandingPage() {
                   {error}
                 </p>
               )}
-
-              {!guestUsed && (
-                <p className="text-white/20 text-[11px] font-mono text-center">
-                  1 free generation · No account required
-                </p>
-              )}
             </div>
 
             {/* Right — Output */}
