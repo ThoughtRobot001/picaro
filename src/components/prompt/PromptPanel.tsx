@@ -75,6 +75,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
   const { user } = useAuth();
   const { refresh: refreshUsage } = useUsage();
   const [iterations, setIterations] = useState<Iteration[]>([]);
+  const activeIterationRef = useRef<Iteration | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
@@ -205,40 +206,40 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
       const { currentPageId, updatePageResult } = useStore.getState();
       updatePageResult(currentPageId, result.imageURL);
       
-      setIterations((prev) => {
-        const isRefinement = mode === 'refine';
-        const branchCount = prev.filter(i => i.isRefinement).length;
-        const stepLabel = isRefinement 
-          ? `Step ${prev.length - branchCount}.${branchCount + 1}` 
-          : `Step ${prev.length + 1}`;
-          
-        return [
-          ...prev.map(i => ({ ...i, isActive: false })),
-          {
-            id: Date.now().toString(),
-            step: stepLabel,
-            prompt: userPrompt || (isRefinement ? 'Refinement' : 'Initial Generation'),
-            thumbnailUrl: result.imageURL ?? null,
-            isRefinement,
-            isActive: true,
-          }
-        ];
-      });
+      const isRefinement = mode === 'refine';
+      let stepLabel = '';
+      
+      if (!isRefinement) {
+        const freshCount = iterations.filter(i => !i.isRefinement).length;
+        stepLabel = `Step ${freshCount + 1}`;
+      } else {
+        const activeIter = activeIterationRef.current ?? iterations.find(i => i.isActive);
+        if (activeIter) {
+          const parentStep = activeIter.step;
+          const siblings = iterations.filter(i => i.isRefinement && i.step.startsWith(parentStep + '.'));
+          stepLabel = `${parentStep}.${siblings.length + 1}`;
+        } else {
+          const freshCount = iterations.filter(i => !i.isRefinement).length;
+          const refCount = iterations.filter(i => i.isRefinement).length;
+          stepLabel = `Step ${freshCount}.${refCount + 1}`;
+        }
+      }
+
+      const newIteration = {
+        id: Date.now().toString(),
+        step: stepLabel,
+        prompt: userPrompt || (isRefinement ? 'Refinement' : 'Initial Generation'),
+        thumbnailUrl: result.imageURL ?? null,
+        isRefinement,
+        isActive: true,
+      };
+
+      setIterations((prev) => [
+        ...prev.map(i => ({ ...i, isActive: false })),
+        newIteration
+      ]);
 
       if (currentProjectId && user) {
-        const isRefinement = mode === 'refine';
-        const stepLabel = isRefinement 
-          ? `Step ${iterations.length - iterations.filter(i => i.isRefinement).length}.${iterations.filter(i => i.isRefinement).length + 1}` 
-          : `Step ${iterations.length + 1}`;
-
-        const newIteration = {
-          id: Date.now().toString(),
-          step: stepLabel,
-          prompt: userPrompt || (isRefinement ? 'Refinement' : 'Initial Generation'),
-          thumbnailUrl: result.imageURL ?? null,
-          isRefinement,
-          isActive: true,
-        };
         saveIteration(
           user.id,
           currentProjectId,
@@ -260,6 +261,8 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
   const handleRevertToStep = async (iter: Iteration) => {
     if (iter.isActive) return;
     if (!iter.thumbnailUrl) return;
+
+    activeIterationRef.current = iter;
 
     setIterations((prev) =>
       prev.map((i) => ({
@@ -286,6 +289,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
 
   const handleGenerate = async () => {
     if (isGenerating) return;
+    activeIterationRef.current = null;
     setLastGeneratedURL(null);
     await runGeneration('', 'generate');
   };
@@ -405,9 +409,16 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
                     className={`flex gap-4 relative group cursor-pointer ${iter.isRefinement ? 'ml-8' : ''}`}
                     onClick={() => handleRevertToStep(iter)}
                   >
-                    {idx < iterations.length - 1 && (
-                      <div className="absolute left-[15px] top-[32px] bottom-[-20px] w-[2px] bg-white/[0.05] group-hover:bg-white/[0.1] transition-colors" />
-                    )}
+                    {(() => {
+                      if (idx >= iterations.length - 1) return null;
+                      const next = iterations[idx + 1];
+                      const isParentOfNext = next.isRefinement && next.step.startsWith(iter.step.split('.')[0]);
+                      const isSameLevel = !next.isRefinement && !iter.isRefinement;
+                      if (!isParentOfNext && !isSameLevel) return null;
+                      return (
+                        <div className="absolute left-[15px] top-[32px] bottom-[-20px] w-[2px] bg-white/[0.05] group-hover:bg-white/[0.1] transition-colors" />
+                      );
+                    })()}
                     {iter.isRefinement && (
                        <div className="absolute left-[-24px] top-[15px] w-[16px] h-[2px] bg-white/[0.05]" />
                     )}
