@@ -1,4 +1,6 @@
 import React, { useRef, useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../lib/useAuth';
 import { useStore } from '../store/useStore';
 import { useDatabase } from '../lib/useDatabase';
 import { PicaroCanvas } from '../components/canvas/PicaroCanvas';
@@ -23,6 +25,15 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export default function PicaroApp() {
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/');
+    }
+  }, [user, loading, navigate]);
+
   const {
     selectedStyle,
     setSelectedStyle,
@@ -58,6 +69,9 @@ export default function PicaroApp() {
     deletePageFromDatabase,
     deleteProjectFromDatabase,
   } = useDatabase();
+
+  if (loading) return null;
+  if (!user) return null;
 
   const canvasExportRef = useRef<Record<number, string>>({});
   const saveTimeoutRef = useRef<number | null>(null);
