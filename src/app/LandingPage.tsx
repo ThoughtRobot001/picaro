@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   Sparkles, ArrowRight, Loader2, Brush, Eraser, Minus, Plus, Check, Zap, Layers, Image as ImageIcon, Lock, UserPlus, Users, Palette, Github, Twitter, Instagram, ArrowUpRight
 } from 'lucide-react';
 import { AuthModal } from '../components/auth/AuthModal';
@@ -21,7 +21,7 @@ function getGuestToken(): string {
 const GUEST_USED_KEY = 'picaro_guest_used';
 
 // ─── MINI CANVAS ─────────────────────────────────────
-function MiniCanvas({ 
+function MiniCanvas({
   canvasRef,
   activeTool,
   brushSize,
@@ -194,7 +194,7 @@ function ComparisonSlider() {
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-3xl overflow-hidden cursor-ew-resize select-none border border-white/10 bg-[#0A0A0A]"
       onPointerDown={handlePointerDown}
@@ -204,9 +204,9 @@ function ComparisonSlider() {
     >
       {/* Before Image - rough sketch */}
       <img src="/landing/From sketch.png" alt="Rough Sketch" className="absolute inset-0 w-full h-full object-contain bg-white" draggable={false} />
-      
+
       {/* After Image - finished art */}
-      <div 
+      <div
         className="absolute inset-0 w-full h-full"
         style={{ clipPath: `inset(0 0 0 ${sliderPos}%)` }}
       >
@@ -214,7 +214,7 @@ function ComparisonSlider() {
       </div>
 
       {/* Handle */}
-      <div 
+      <div
         className="absolute top-0 bottom-0 w-[3px] bg-gradient-to-b from-teal-400 to-emerald-500 shadow-[0_0_15px_rgba(20,184,166,0.8)]"
         style={{ left: `${sliderPos}%` }}
       >
@@ -253,18 +253,17 @@ function PricingCard({
 }) {
   return (
     <div
-      className={`relative flex flex-col rounded-[32px] border p-8 transition-all duration-500 ${
-        highlighted
-          ? 'border-teal-500 bg-[#050505] shadow-[0_0_40px_rgba(20,184,166,0.1)] scale-105 z-10'
-          : 'border-white/5 bg-[#050505] hover:border-white/10'
-      }`}
+      className={`relative flex flex-col rounded-[32px] border p-8 transition-all duration-500 ${highlighted
+        ? 'border-teal-500 bg-[#050505] shadow-[0_0_40px_rgba(20,184,166,0.1)] scale-105 z-10'
+        : 'border-white/5 bg-[#050505] hover:border-white/10'
+        }`}
     >
       {highlighted && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-teal-500 px-4 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] text-black">
           Most Popular
         </div>
       )}
-      
+
       <div className="mb-8">
         <h3 className="font-outfit text-2xl font-bold text-white mb-2">{name}</h3>
         <p className="text-white/40 text-sm leading-relaxed">{description}</p>
@@ -288,11 +287,10 @@ function PricingCard({
 
       <button
         onClick={onCTA}
-        className={`w-full py-4 rounded-2xl font-bold text-sm transition-all duration-300 ${
-          highlighted
-            ? 'bg-teal-500 text-black hover:shadow-[0_0_30px_rgba(20,184,166,0.3)] hover:scale-[1.02] active:scale-[0.98]'
-            : 'bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:scale-[1.02] active:scale-[0.98]'
-        }`}
+        className={`w-full py-4 rounded-2xl font-bold text-sm transition-all duration-300 ${highlighted
+          ? 'bg-teal-500 text-black hover:shadow-[0_0_30px_rgba(20,184,166,0.3)] hover:scale-[1.02] active:scale-[0.98]'
+          : 'bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:scale-[1.02] active:scale-[0.98]'
+          }`}
       >
         {cta}
       </button>
@@ -368,7 +366,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-[#050505] text-white font-inter selection:bg-teal-500/30 overflow-x-hidden relative"
     >
       {/* GLOBAL GLOWS */}
@@ -418,10 +416,10 @@ export default function LandingPage() {
       </nav>
 
       <main className="relative z-10 flex flex-col items-center w-full">
-        
+
         {/* ── HERO ────────────────────────────────────── */}
         <section className="pt-40 pb-20 px-6 w-full max-w-7xl mx-auto text-center flex flex-col items-center relative">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
             className="flex flex-col items-center"
           >
@@ -432,7 +430,7 @@ export default function LandingPage() {
               </span>
             </div>
             <h1 className="font-outfit text-6xl md:text-8xl font-bold tracking-tight mb-6 leading-[1.05]">
-              Keep the same identity.<br/>
+              Keep the same identity.<br />
               <span className="bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">
                 Across every scene.
               </span>
@@ -453,7 +451,7 @@ export default function LandingPage() {
 
         {/* ── INTERACTIVE DEMO ──────────────────────── */}
         <section id="demo" className="py-10 px-6 w-full max-w-6xl mx-auto relative z-20">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
             className="w-full flex flex-col items-center"
           >
@@ -463,7 +461,7 @@ export default function LandingPage() {
             <p className="text-lg md:text-xl text-white/60 text-center max-w-3xl mb-10 leading-relaxed font-inter">
               Draw a rough sketch, define your character, and let Picora do the rest. Your creations stay consistent, scene after scene.
             </p>
-            
+
             <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#0A0A0A] p-4 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
               {/* Left pane: Canvas */}
               <div className="flex flex-col gap-4">
@@ -489,17 +487,17 @@ export default function LandingPage() {
                 {/* Prompt & Generate */}
                 <div className="flex flex-col gap-2 relative">
                   <div className="absolute top-2 right-3 font-mono text-[10px] text-teal-500 uppercase tracking-wider bg-teal-500/10 px-2 py-0.5 rounded">Prompt</div>
-                  <textarea 
+                  <textarea
                     className="w-full bg-[#111] border border-white/10 rounded-2xl p-4 text-[14px] text-white resize-none outline-none focus:border-teal-500/50 transition-colors"
                     rows={2}
                     defaultValue="a young boy with red hair looking up at the stars"
                     readOnly
                   />
-                  <button 
+                  <button
                     onClick={handleGenerate} disabled={isGenerating}
                     className="w-full h-12 rounded-xl font-mono text-[12px] uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-600 text-white hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] disabled:opacity-50"
                   >
-                    {isGenerating ? <><Loader2 size={16} className="animate-spin"/> Generating...</> : guestUsed ? "Sign up to keep generating" : "Generate with Picora"}
+                    {isGenerating ? <><Loader2 size={16} className="animate-spin" /> Generating...</> : guestUsed ? "Sign up to keep generating" : "Generate with Picora"}
                   </button>
                 </div>
               </div>
@@ -519,7 +517,7 @@ export default function LandingPage() {
 
             <div className="mt-8 flex items-center gap-3">
               <div className="flex -space-x-3">
-                {[1,2,3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-[#050505] bg-teal-900" />)}
+                {[1, 2, 3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-[#050505] bg-teal-900" />)}
               </div>
               <p className="font-mono text-[11px] text-white/40 uppercase tracking-wider">Joined by 10,000+ creators</p>
             </div>
@@ -556,19 +554,19 @@ export default function LandingPage() {
               <div className="grid grid-cols-2 gap-3 p-4 bg-[#0A0A0A] rounded-3xl border border-white/10">
                 <div className="relative">
                   <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">SEED</span>
-                  <img src="/landing/Consistent character 1.png" alt="Character Seed" className="rounded-2xl w-full object-cover aspect-square" />
+                  <img src="/landing/Seed.png" alt="Character Seed" className="rounded-2xl w-full object-cover aspect-square" />
                 </div>
                 <div className="relative">
                   <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">FRAME 1</span>
-                  <img src="/landing/Consistent character 2.png" alt="Frame 1" className="rounded-2xl w-full object-cover aspect-square" />
+                  <img src="/landing/Consistent character 1.png" alt="Frame 1" className="rounded-2xl w-full object-cover aspect-square" />
                 </div>
                 <div className="relative">
                   <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">FRAME 2</span>
-                  <img src="/landing/Consistent character 3.png" alt="Frame 2" className="rounded-2xl w-full object-cover aspect-square" />
+                  <img src="/landing/Consistent character 2.png" alt="Frame 2" className="rounded-2xl w-full object-cover aspect-square" />
                 </div>
                 <div className="relative">
                   <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">FRAME 3</span>
-                  <img src="/landing/Seed.png" alt="Frame 3" className="rounded-2xl w-full object-cover aspect-square" />
+                  <img src="/landing/Consistent character 3.png" alt="Frame 3" className="rounded-2xl w-full object-cover aspect-square" />
                 </div>
               </div>
               {/* Lock icon overlay */}
@@ -641,13 +639,13 @@ export default function LandingPage() {
                 {/* SVG branch connector */}
                 <svg width="60" height="160" viewBox="0 0 60 160" fill="none" className="flex-shrink-0">
                   {/* Horizontal lines from each image */}
-                  <line x1="0" y1="28" x2="30" y2="28" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7"/>
-                  <line x1="0" y1="80" x2="30" y2="80" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7"/>
-                  <line x1="0" y1="132" x2="30" y2="132" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7"/>
+                  <line x1="0" y1="28" x2="30" y2="28" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7" />
+                  <line x1="0" y1="80" x2="30" y2="80" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7" />
+                  <line x1="0" y1="132" x2="30" y2="132" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7" />
                   {/* Vertical spine */}
-                  <line x1="30" y1="28" x2="30" y2="132" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7"/>
+                  <line x1="30" y1="28" x2="30" y2="132" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7" />
                   {/* Horizontal line to circle */}
-                  <line x1="30" y1="80" x2="60" y2="80" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7"/>
+                  <line x1="30" y1="80" x2="60" y2="80" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7" />
                 </svg>
                 {/* 60% badge */}
                 <div className="w-16 h-16 rounded-full bg-teal-500 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(20,184,166,0.4)] flex-shrink-0 z-10">
@@ -690,7 +688,7 @@ export default function LandingPage() {
                   ))}
                 </div>
                 <div className="flex gap-1.5 justify-center mt-1">
-                  {[0,1,2,3].map(i => (
+                  {[0, 1, 2, 3].map(i => (
                     <div key={i} className={`rounded-full transition-all ${i === 0 ? 'w-4 h-1.5 bg-teal-400' : 'w-1.5 h-1.5 bg-white/20'}`} />
                   ))}
                 </div>
@@ -735,13 +733,13 @@ export default function LandingPage() {
         <section className="py-12 px-6 w-full max-w-4xl mx-auto">
           <div className="rounded-[32px] border border-white/5 bg-gradient-to-br from-[#0f0f11] to-[#050505] p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-10 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/5 blur-[100px] rounded-full pointer-events-none" />
-            
+
             <div className="relative z-10 flex-1">
               <h2 className="font-outfit text-3xl md:text-4xl font-extrabold mb-4 leading-[0.9] tracking-tight">Build in Public.</h2>
               <p className="text-[#888888] text-[15px] max-w-[480px] leading-relaxed mb-6">
                 Picora is evolving every day. We're transparent about our progress and dedicated to building the ultimate tool for storytellers.
               </p>
-              
+
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-500 text-[10px] font-bold uppercase tracking-wider">New</span>
@@ -768,16 +766,16 @@ export default function LandingPage() {
         {/* ── PRICING ─────────────────────────────────── */}
         <section id="pricing" className="py-24 px-6 w-full max-w-6xl mx-auto relative">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
-          
+
           <div className="text-center mb-16 relative z-10">
             <h2 className="font-outfit text-4xl md:text-5xl font-extrabold mb-8 leading-[0.9] tracking-tight">
               Simple, outcome-focused <span className="text-teal-400">pricing.</span>
             </h2>
-            
+
             {/* Toggle */}
             <div className="flex items-center justify-center gap-4">
               <span className={`text-sm font-medium transition-colors ${!isYearly ? 'text-white' : 'text-white/40'}`}>Monthly</span>
-              <button 
+              <button
                 onClick={() => setIsYearly(!isYearly)}
                 className="w-12 h-6 rounded-full bg-white/10 relative p-1 transition-colors hover:bg-white/20"
               >
@@ -894,7 +892,7 @@ export default function LandingPage() {
               <a href="#" className="w-10 h-10 rounded-full border border-white/[0.08] flex items-center justify-center text-white/50 hover:bg-white/5 hover:border-white/20 hover:text-white transition-all"><Instagram size={16} strokeWidth={1.5} /></a>
             </div>
           </div>
-          
+
           {/* Product Column */}
           <div className="md:col-span-3 flex flex-col gap-4">
             <h4 className="font-outfit text-[11px] font-extrabold text-white/40 uppercase tracking-[0.15em] mb-2">Product</h4>
@@ -903,7 +901,7 @@ export default function LandingPage() {
             <a href="#" className="text-[14px] text-[#888888] hover:text-teal-400 transition-colors">Scene Sync</a>
             <a href="#" className="text-[14px] text-[#888888] hover:text-teal-400 transition-colors flex items-center gap-1.5">API <ArrowUpRight size={14} className="text-teal-500" /></a>
           </div>
-          
+
           {/* Company Column */}
           <div className="md:col-span-3 flex flex-col gap-4">
             <h4 className="font-outfit text-[11px] font-extrabold text-white/40 uppercase tracking-[0.15em] mb-2">Company</h4>
@@ -913,7 +911,7 @@ export default function LandingPage() {
             <a href="#" className="text-[14px] text-[#888888] hover:text-teal-400 transition-colors">Contact</a>
           </div>
         </div>
-        
+
         {/* Bottom Bar */}
         <div className="max-w-6xl mx-auto pt-8 border-t border-white/[0.04] flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[12px] text-[#555555]">
