@@ -47,11 +47,7 @@ const UserDropdown: React.FC<{
       <button
         type="button"
         onClick={onOpenAuth}
-        className="mr-2 h-7 rounded-lg px-3 font-mono text-[10px] font-bold uppercase tracking-wider transition-all hover:opacity-90"
-        style={{
-          background: 'linear-gradient(135deg, #12b76a 0%, #0ea5e9 100%)',
-          color: '#fff',
-        }}
+        className="btn-primary mr-2 h-8 text-[12px] px-4 font-outfit"
       >
         Sign In
       </button>
@@ -271,7 +267,7 @@ const TopBarActions: React.FC<TopBarActionsProps> = ({
 
       <button
         type="button"
-        className="picaro-export-btn"
+        className="btn-secondary h-8 text-[12px] px-4"
         onClick={onExport}
       >
         Export
