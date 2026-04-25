@@ -202,15 +202,15 @@ function ComparisonSlider() {
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
     >
-      {/* Before Image */}
-      <img src="/landing/Gemini_Generated_Image_y8z1b2y8z1b2y8z1 1.png" alt="Sketch" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+      {/* Before Image - rough sketch */}
+      <img src="/landing/From sketch.png" alt="Rough Sketch" className="absolute inset-0 w-full h-full object-contain bg-white" draggable={false} />
       
-      {/* After Image */}
+      {/* After Image - finished art */}
       <div 
         className="absolute inset-0 w-full h-full"
         style={{ clipPath: `inset(0 0 0 ${sliderPos}%)` }}
       >
-        <img src="/landing/Gemini_Generated_Image_8bm6p8bm6p8bm6p8 1.png" alt="Rendered Art" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+        <img src="/landing/Finished Art.png" alt="Finished Art" className="absolute inset-0 w-full h-full object-contain bg-white" draggable={false} />
       </div>
 
       {/* Handle */}
@@ -537,22 +537,42 @@ export default function LandingPage() {
         <section className="py-24 px-6 w-full max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-100px" }}>
-              <div className="inline-block px-3 py-1 bg-white/5 border border-white/10 rounded-full font-mono text-[10px] text-white/60 uppercase tracking-widest mb-6">
-                IDENTITY ENGINE
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-500/10 border border-teal-500/20 rounded-full font-mono text-[10px] text-teal-400 uppercase tracking-widest mb-6">
+                CONSISTENCY IS CORE
               </div>
-              <h2 className="font-outfit text-4xl md:text-5xl font-bold mb-6 leading-tight">
-                Keep the same character.<br/>
-                <span className="text-white/40">Every single time.</span>
+              <h2 className="font-outfit text-5xl md:text-6xl font-bold mb-4 leading-tight">
+                Keep the same character.
               </h2>
-              <p className="text-white/50 text-lg leading-relaxed mb-8 max-w-md">
-                Lock in your character's DNA. Generate them in any pose, any style, and any environment. Perfect for storyboarding, comics, and game assets.
+              <h3 className="font-outfit text-5xl md:text-6xl font-bold mb-6 leading-tight text-white/40">
+                Every single time.
+              </h3>
+              <p className="text-white/50 text-base leading-relaxed max-w-md">
+                While basic AI art tools generate random beautiful images, Picora is built for storytellers. Our Seed-Sync™ technology matches facial features and silhouettes across generations.
               </p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-100px" }} className="grid grid-cols-2 gap-4">
-              <img src="/landing/ChatGPT Image Apr 25, 2026, 01_59_09 PM 1.png" alt="Vanellope 1" className="rounded-2xl border border-white/10 w-full object-cover aspect-square bg-[#0A0A0A]" />
-              <img src="/landing/ChatGPT Image Apr 25, 2026, 01_59_16 PM 1.png" alt="Vanellope 2" className="rounded-2xl border border-white/10 w-full object-cover aspect-square bg-[#0A0A0A]" />
-              <img src="/landing/ChatGPT Image Apr 25, 2026, 01_59_22 PM 1.png" alt="Vanellope 3" className="rounded-2xl border border-white/10 w-full object-cover aspect-square bg-[#0A0A0A]" />
-              <img src="/landing/Gemini_Generated_Image_8zch358zch358zch 1.png" alt="Vanellope 4" className="rounded-2xl border border-white/10 w-full object-cover aspect-square bg-[#0A0A0A]" />
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-100px" }} className="relative">
+              <div className="grid grid-cols-2 gap-3 p-4 bg-[#0A0A0A] rounded-3xl border border-white/10">
+                <div className="relative">
+                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">SEED</span>
+                  <img src="/landing/Consistent character 1.png" alt="Character Seed" className="rounded-2xl w-full object-cover aspect-square" />
+                </div>
+                <div className="relative">
+                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">FRAME 1</span>
+                  <img src="/landing/Consistent character 2.png" alt="Frame 1" className="rounded-2xl w-full object-cover aspect-square" />
+                </div>
+                <div className="relative">
+                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">FRAME 2</span>
+                  <img src="/landing/Consistent character 3.png" alt="Frame 2" className="rounded-2xl w-full object-cover aspect-square" />
+                </div>
+                <div className="relative">
+                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">FRAME 3</span>
+                  <img src="/landing/Seed.png" alt="Frame 3" className="rounded-2xl w-full object-cover aspect-square" />
+                </div>
+              </div>
+              {/* Lock icon overlay */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-[#111] border border-white/20 flex items-center justify-center shadow-[0_0_30px_rgba(0,0,0,0.6)] z-20">
+                <Lock size={22} className="text-teal-400" />
+              </div>
             </motion.div>
           </div>
         </section>
@@ -561,62 +581,87 @@ export default function LandingPage() {
         <section id="use-cases" className="py-24 px-6 w-full max-w-6xl mx-auto">
           <motion.div 
             initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }}
-            variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.12 } } }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
           >
             {/* 1. Character Lock */}
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="lg:col-span-2 bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col justify-between overflow-hidden relative group">
-              <div className="relative z-10 mb-8">
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col gap-6 overflow-hidden">
+              <div>
                 <div className="w-10 h-10 bg-teal-500/10 rounded-xl flex items-center justify-center mb-4 border border-teal-500/20"><Lock size={18} className="text-teal-400" /></div>
                 <h3 className="font-outfit text-2xl font-bold mb-2">Character Lock</h3>
-                <p className="text-white/40">Preserve facial features, clothing, and proportions flawlessly across infinite generations.</p>
+                <p className="text-white/40 text-sm leading-relaxed">Save a character once. Draw them in any pose, any scene — Picora keeps them exactly who they are.</p>
               </div>
-              <div className="w-full bg-[#111] rounded-2xl border border-white/5 p-4 flex gap-4 overflow-hidden mt-auto">
-                {/* Mockup visual */}
-                <img src="/landing/Gemini_Generated_Image_y6lmvfy6lmvfy6lm 1.png" alt="Demo" className="w-1/3 rounded-xl border border-white/10 object-cover" />
-                <img src="/landing/Gemini_Generated_Image_kyk89ekyk89ekyk8 2.png" alt="Demo" className="w-1/3 rounded-xl border border-white/10 object-cover" />
-                <img src="/landing/Gemini_Generated_Image_w241e1w241e1w241 3.png" alt="Demo" className="w-1/3 rounded-xl border border-white/10 object-cover" />
+              <div className="flex gap-3 mt-auto">
+                <img src="/landing/Character lock 1.png" alt="Character 1" className="flex-1 h-28 rounded-xl object-cover border border-white/10" />
+                <img src="/landing/Character lock 2.png" alt="Character 2" className="flex-1 h-28 rounded-xl object-cover border border-white/10" />
+                <img src="/landing/Character lock 3.png" alt="Character 3" className="flex-1 h-28 rounded-xl object-cover border border-white/10" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Check size={14} className="text-teal-400" />
+                <span className="font-mono text-[11px] text-teal-400 uppercase tracking-wider">Identity preserved</span>
               </div>
             </motion.div>
 
-            {/* 2. Multi-Character */}
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col justify-between overflow-hidden relative group">
-              <div className="relative z-10 mb-8">
-                <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-4 border border-emerald-500/20"><UserPlus size={18} className="text-emerald-400" /></div>
-                <h3 className="font-outfit text-2xl font-bold mb-2">Multi-Character</h3>
-                <p className="text-white/40">Assign specific seeds to different layers in the same scene.</p>
+            {/* 2. Seed Strength Control */}
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col gap-6 overflow-hidden">
+              <div>
+                <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-4 border border-emerald-500/20"><Zap size={18} className="text-emerald-400" /></div>
+                <h3 className="font-outfit text-2xl font-bold mb-2">Seed Strength Control</h3>
+                <p className="text-white/40 text-sm leading-relaxed">Add more reference images to sharpen your character's identity. The more you add, the harder it holds across every generation.</p>
               </div>
-              <div className="w-full bg-[#111] rounded-2xl border border-white/5 p-4 flex flex-col gap-2 mt-auto relative">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white/10" />
-                  <div className="h-2 bg-teal-500 rounded-full flex-1" />
+              <div className="mt-auto flex items-center gap-4">
+                <div className="flex flex-col gap-3">
+                  <img src="/landing/Seed strength control 1.png" alt="Seed 1" className="w-16 h-16 rounded-xl object-cover border border-white/10" />
+                  <img src="/landing/Seed strength contol 2.png" alt="Seed 2" className="w-16 h-16 rounded-xl object-cover border border-white/10" />
+                  <img src="/landing/Seed strength 3.png" alt="Seed 3" className="w-16 h-16 rounded-xl object-cover border border-white/10" />
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white/10" />
-                  <div className="h-2 bg-emerald-500 rounded-full w-1/2" />
+                <div className="flex-1 flex flex-col gap-1">
+                  <div className="h-px bg-emerald-500/30 w-full" />
+                  <div className="h-px bg-emerald-500/40 w-3/4 ml-auto" />
+                  <div className="h-px bg-emerald-500/50 w-1/2 ml-auto" />
+                </div>
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex flex-col items-center justify-center">
+                  <span className="font-mono text-lg font-bold text-emerald-400">60%</span>
+                  <span className="font-mono text-[8px] text-emerald-400/60 uppercase tracking-wider">lock strength</span>
                 </div>
               </div>
             </motion.div>
 
-            {/* 3. Any Pose */}
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col justify-between overflow-hidden relative group">
-              <div className="relative z-10 mb-8">
-                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4 border border-blue-500/20"><Users size={18} className="text-blue-400" /></div>
-                <h3 className="font-outfit text-2xl font-bold mb-2">Any Pose</h3>
-                <p className="text-white/40">Direct your character's action with simple stick-figure sketches.</p>
-              </div>
-            </motion.div>
-
-            {/* 4. Any Style */}
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="lg:col-span-2 bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col justify-between overflow-hidden relative group">
-              <div className="relative z-10 mb-8">
+            {/* 3. Style Picker */}
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col gap-6 overflow-hidden">
+              <div>
                 <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center mb-4 border border-purple-500/20"><Palette size={18} className="text-purple-400" /></div>
-                <h3 className="font-outfit text-2xl font-bold mb-2">Any Style</h3>
-                <p className="text-white/40">From photorealism to anime to 3D render. One click transforms the aesthetic without losing the identity.</p>
+                <h3 className="font-outfit text-2xl font-bold mb-2">Style Picker</h3>
+                <p className="text-white/40 text-sm leading-relaxed">Choose your visual world before you generate. Photorealistic, Anime, Manga, Oil Painting — your sketch, your style.</p>
               </div>
-              <div className="flex gap-4 overflow-hidden mt-auto">
-                <img src="/landing/Gemini_Generated_Image_g6qqmvg6qqmvg6qq 1.png" alt="Style 1" className="w-48 h-32 rounded-xl object-cover border border-white/10" />
-                <img src="/landing/Gemini_Generated_Image_u9rml5u9rml5u9rm 1.png" alt="Style 2" className="w-48 h-32 rounded-xl object-cover border border-white/10" />
+              <div className="mt-auto">
+                <div className="flex gap-2">
+                  {[
+                    { src: '/landing/Style picker 1.png', label: 'Photorealistic' },
+                    { src: '/landing/Style picker 2.png', label: 'Anime' },
+                    { src: '/landing/Style picker 3.png', label: 'Manga' },
+                    { src: '/landing/Style picker 4.png', label: 'Oil Painting' },
+                  ].map((s, i) => (
+                    <div key={i} className={`flex-1 flex flex-col gap-1 ${ i === 0 ? 'ring-1 ring-teal-500 rounded-xl' : '' }`}>
+                      <img src={s.src} alt={s.label} className="w-full h-24 rounded-xl object-cover border border-white/10" />
+                      <span className={`font-mono text-[9px] text-center uppercase tracking-wider ${ i === 0 ? 'text-teal-400' : 'text-white/30'}`}>{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* 4. Layer System */}
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col gap-6 overflow-hidden">
+              <div>
+                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4 border border-blue-500/20"><Layers size={18} className="text-blue-400" /></div>
+                <h3 className="font-outfit text-2xl font-bold mb-2">Layer System</h3>
+                <p className="text-white/40 text-sm leading-relaxed">Build scenes with multiple characters and objects without losing what makes each one unique.</p>
+              </div>
+              <div className="mt-auto relative h-32 flex items-end">
+                <img src="/landing/Layer system 1.png" alt="Layer 1" className="absolute right-0 bottom-0 w-3/4 h-full rounded-xl object-cover border border-white/10" style={{ transform: 'rotate(6deg) translateY(4px)' }} />
+                <img src="/landing/Layer system 2.png" alt="Layer 2" className="absolute right-4 bottom-0 w-3/4 h-full rounded-xl object-cover border border-white/10" style={{ transform: 'rotate(3deg) translateY(2px)' }} />
+                <img src="/landing/Layer system 3.png" alt="Layer 3" className="absolute right-8 bottom-0 w-3/4 h-full rounded-xl object-cover border border-white/10" />
               </div>
             </motion.div>
           </motion.div>
