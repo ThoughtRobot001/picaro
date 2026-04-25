@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Sparkles, ArrowRight, Loader2, Brush, Eraser, Minus, Plus, Check, Zap, Layers, Image as ImageIcon, Lock, UserPlus, Palette, Github, Twitter
+  Sparkles, ArrowRight, Loader2, Brush, Eraser, Minus, Plus, Check, Zap, Layers, Image as ImageIcon, Lock, UserPlus, Users, Palette, Github, Twitter
 } from 'lucide-react';
 import { AuthModal } from '../components/auth/AuthModal';
 import { useAuth } from '../lib/useAuth';
