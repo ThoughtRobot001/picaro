@@ -586,36 +586,40 @@ export default function LandingPage() {
           >
             {/* 1. Character Lock */}
             <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-              className="bg-[#0A0A0A] rounded-3xl border border-white/[0.08] p-7 flex flex-row gap-6 overflow-hidden min-h-[200px]"
+              className="bg-[#0A0A0A] rounded-3xl border border-white/[0.08] p-7 flex flex-row gap-5 overflow-hidden"
+              style={{ minHeight: '220px' }}
             >
-              {/* Left: text */}
-              <div className="flex flex-col flex-shrink-0 w-44">
+              {/* Left: text only */}
+              <div className="flex flex-col w-40 flex-shrink-0">
                 <div className="w-9 h-9 bg-teal-500/10 rounded-xl flex items-center justify-center mb-4 border border-teal-500/20">
                   <Lock size={16} className="text-teal-400" />
                 </div>
                 <h3 className="font-outfit text-lg font-bold mb-2">Character Lock</h3>
-                <p className="text-white/40 text-[12px] leading-relaxed flex-1">
+                <p className="text-white/40 text-[12px] leading-relaxed">
                   Save a character once. Draw them in any pose, any scene — Picora keeps them exactly who they are.
                 </p>
-                <div className="flex items-center gap-1.5 mt-4">
-                  <Check size={12} className="text-teal-400" />
-                  <span className="font-mono text-[10px] text-teal-400 uppercase tracking-wider">Identity preserved</span>
-                </div>
               </div>
-              {/* Right: images */}
-              <div className="flex-1 flex gap-2 items-center min-w-0">
-                <img src="/landing/Character lock 1.png" alt="Character 1" className="flex-1 h-full max-h-36 rounded-xl object-cover border border-white/10" />
-                <img src="/landing/Character lock 2.png" alt="Character 2" className="flex-1 h-full max-h-36 rounded-xl object-cover border border-white/10" />
-                <img src="/landing/Character lock 3.png" alt="Character 3" className="flex-1 h-full max-h-36 rounded-xl object-cover border border-white/10" />
+              {/* Right: images + badge below */}
+              <div className="flex-1 flex flex-col gap-3 min-w-0">
+                <div className="flex gap-2 flex-1">
+                  <img src="/landing/Character lock 1.png" alt="Character 1" className="flex-1 rounded-xl object-cover border border-white/10 min-h-0" style={{ maxHeight: '150px' }} />
+                  <img src="/landing/Character lock 2.png" alt="Character 2" className="flex-1 rounded-xl object-cover border border-white/10 min-h-0" style={{ maxHeight: '150px' }} />
+                  <img src="/landing/Character lock 3.png" alt="Character 3" className="flex-1 rounded-xl object-cover border border-white/10 min-h-0" style={{ maxHeight: '150px' }} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check size={13} className="text-teal-400" />
+                  <span className="text-[12px] text-teal-400 font-medium">Identity preserved</span>
+                </div>
               </div>
             </motion.div>
 
             {/* 2. Seed Strength Control */}
             <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-              className="bg-[#0A0A0A] rounded-3xl border border-white/[0.08] p-7 flex flex-row gap-6 overflow-hidden min-h-[200px]"
+              className="bg-[#0A0A0A] rounded-3xl border border-white/[0.08] p-7 flex flex-row gap-5 overflow-hidden"
+              style={{ minHeight: '220px' }}
             >
               {/* Left: text */}
-              <div className="flex flex-col flex-shrink-0 w-44">
+              <div className="flex flex-col w-40 flex-shrink-0">
                 <div className="w-9 h-9 bg-teal-500/10 rounded-xl flex items-center justify-center mb-4 border border-teal-500/20">
                   <Zap size={16} className="text-teal-400" />
                 </div>
@@ -624,40 +628,40 @@ export default function LandingPage() {
                   Add more reference images to sharpen your character's identity. The more you add, the harder it holds across every generation.
                 </p>
               </div>
-              {/* Right: tree connector UI */}
-              <div className="flex-1 flex items-center justify-center gap-3 min-w-0">
-                {/* Stacked seed images */}
-                <div className="flex flex-col gap-2">
+              {/* Right: Y-branch tree + badge */}
+              <div className="flex-1 flex items-center justify-center gap-0 min-w-0 relative">
+                {/* Images column */}
+                <div className="flex flex-col gap-3 z-10">
                   <img src="/landing/Seed strength control 1.png" alt="Seed 1" className="w-14 h-14 rounded-xl object-cover border border-white/10" />
                   <img src="/landing/Seed strength contol 2.png" alt="Seed 2" className="w-14 h-14 rounded-xl object-cover border border-white/10" />
                   <img src="/landing/Seed strength 3.png" alt="Seed 3" className="w-14 h-14 rounded-xl object-cover border border-white/10" />
                 </div>
-                {/* Connector lines */}
-                <div className="flex flex-col justify-around h-full py-2 gap-1">
-                  <div className="flex items-center">
-                    <div className="w-6 h-px bg-teal-500/60" />
-                    <div className="w-px h-8 bg-teal-500/60" style={{ marginLeft: '-1px', alignSelf: 'flex-start', marginTop: '-1px' }} />
-                  </div>
-                  <div className="w-8 h-px bg-teal-500/60 ml-0" />
-                  <div className="flex items-center">
-                    <div className="w-6 h-px bg-teal-500/60" />
-                    <div className="w-px h-8 bg-teal-500/60" style={{ marginLeft: '-1px', alignSelf: 'flex-end', marginBottom: '-1px' }} />
-                  </div>
-                </div>
-                {/* Badge */}
-                <div className="w-16 h-16 rounded-full bg-teal-500 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(20,184,166,0.3)] flex-shrink-0">
-                  <span className="font-mono text-base font-bold text-white leading-none">60%</span>
-                  <span className="font-mono text-[8px] text-white/70 uppercase tracking-wide mt-0.5">lock str.</span>
+                {/* SVG branch connector */}
+                <svg width="60" height="160" viewBox="0 0 60 160" fill="none" className="flex-shrink-0">
+                  {/* Horizontal lines from each image */}
+                  <line x1="0" y1="28" x2="30" y2="28" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7"/>
+                  <line x1="0" y1="80" x2="30" y2="80" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7"/>
+                  <line x1="0" y1="132" x2="30" y2="132" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7"/>
+                  {/* Vertical spine */}
+                  <line x1="30" y1="28" x2="30" y2="132" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7"/>
+                  {/* Horizontal line to circle */}
+                  <line x1="30" y1="80" x2="60" y2="80" stroke="#14b8a6" strokeWidth="1.5" strokeOpacity="0.7"/>
+                </svg>
+                {/* 60% badge */}
+                <div className="w-16 h-16 rounded-full bg-teal-500 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(20,184,166,0.4)] flex-shrink-0 z-10">
+                  <span className="font-mono text-[15px] font-bold text-white leading-none">60%</span>
+                  <span className="font-mono text-[7px] text-white/70 uppercase tracking-wide mt-0.5">Seed Score</span>
                 </div>
               </div>
             </motion.div>
 
             {/* 3. Style Picker */}
             <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-              className="bg-[#0A0A0A] rounded-3xl border border-white/[0.08] p-7 flex flex-row gap-6 overflow-hidden min-h-[200px]"
+              className="bg-[#0A0A0A] rounded-3xl border border-white/[0.08] p-7 flex flex-row gap-5 overflow-hidden"
+              style={{ minHeight: '220px' }}
             >
               {/* Left: text */}
-              <div className="flex flex-col flex-shrink-0 w-44">
+              <div className="flex flex-col w-40 flex-shrink-0">
                 <div className="w-9 h-9 bg-teal-500/10 rounded-xl flex items-center justify-center mb-4 border border-teal-500/20">
                   <Palette size={16} className="text-teal-400" />
                 </div>
@@ -666,27 +670,26 @@ export default function LandingPage() {
                   Choose your visual world before you generate. Photorealistic, Anime, Manga, Oil Painting — your sketch, your style.
                 </p>
               </div>
-              {/* Right: style grid */}
-              <div className="flex-1 flex flex-col gap-2 min-w-0">
-                <div className="flex gap-2 flex-1">
+              {/* Right: style images + labels + dots */}
+              <div className="flex-1 flex flex-col gap-2 min-w-0 justify-center">
+                <div className="flex gap-2">
                   {[
                     { src: '/landing/Style picker 1.png', label: 'Photorealistic', active: true },
                     { src: '/landing/Style picker 2.png', label: 'Anime', active: false },
                     { src: '/landing/Style picker 3.png', label: 'Manga', active: false },
                     { src: '/landing/Style picker 4.png', label: 'Oil Painting', active: false },
                   ].map((s, i) => (
-                    <div key={i} className="flex-1 flex flex-col gap-1">
-                      <div className={`rounded-xl overflow-hidden border ${s.active ? 'border-teal-500' : 'border-white/10'}`}>
-                        <img src={s.src} alt={s.label} className="w-full h-20 object-cover" />
+                    <div key={i} className="flex-1 flex flex-col gap-1.5">
+                      <div className={`rounded-xl overflow-hidden border-2 ${s.active ? 'border-teal-500' : 'border-transparent'}`}>
+                        <img src={s.src} alt={s.label} className="w-full h-24 object-cover" />
                       </div>
-                      <span className={`font-mono text-[8px] text-center uppercase tracking-wider ${s.active ? 'text-teal-400' : 'text-white/30'}`}>{s.label}</span>
+                      <span className={`text-[10px] text-center font-medium leading-tight ${s.active ? 'text-white' : 'text-white/40'}`}>{s.label}</span>
                     </div>
                   ))}
                 </div>
-                {/* Dot indicators */}
-                <div className="flex gap-1.5 justify-center">
+                <div className="flex gap-1.5 justify-center mt-1">
                   {[0,1,2,3].map(i => (
-                    <div key={i} className={`rounded-full ${i === 0 ? 'w-3 h-1.5 bg-teal-400' : 'w-1.5 h-1.5 bg-white/20'}`} />
+                    <div key={i} className={`rounded-full transition-all ${i === 0 ? 'w-4 h-1.5 bg-teal-400' : 'w-1.5 h-1.5 bg-white/20'}`} />
                   ))}
                 </div>
               </div>
@@ -694,10 +697,11 @@ export default function LandingPage() {
 
             {/* 4. Layer System */}
             <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-              className="bg-[#0A0A0A] rounded-3xl border border-white/[0.08] p-7 flex flex-row gap-6 overflow-hidden min-h-[200px]"
+              className="bg-[#0A0A0A] rounded-3xl border border-white/[0.08] p-7 flex flex-row gap-5 overflow-hidden"
+              style={{ minHeight: '220px' }}
             >
               {/* Left: text */}
-              <div className="flex flex-col flex-shrink-0 w-44">
+              <div className="flex flex-col w-40 flex-shrink-0">
                 <div className="w-9 h-9 bg-purple-500/10 rounded-xl flex items-center justify-center mb-4 border border-purple-500/20">
                   <Layers size={16} className="text-purple-400" />
                 </div>
@@ -706,17 +710,23 @@ export default function LandingPage() {
                   Build scenes with multiple characters and objects without losing what makes each one unique.
                 </p>
               </div>
-              {/* Right: fanned layers */}
-              <div className="flex-1 relative flex items-center justify-center min-w-0">
-                <img src="/landing/Layer system 1.png" alt="Layer 1" className="absolute w-4/5 h-36 rounded-xl object-cover border border-white/10 shadow-xl" style={{ transform: 'rotate(8deg) translateX(16px)', zIndex: 1 }} />
-                <img src="/landing/Layer system 2.png" alt="Layer 2" className="absolute w-4/5 h-36 rounded-xl object-cover border border-white/10 shadow-xl" style={{ transform: 'rotate(4deg) translateX(8px)', zIndex: 2 }} />
-                <img src="/landing/Layer system 3.png" alt="Layer 3" className="absolute w-4/5 h-36 rounded-xl object-cover border border-white/10 shadow-xl" style={{ transform: 'rotate(0deg)', zIndex: 3 }} />
+              {/* Right: fanned layer images */}
+              <div className="flex-1 relative flex items-center justify-end pr-4 min-w-0">
+                <div className="relative w-full h-40">
+                  <img src="/landing/Layer system 1.png" alt="Layer 1"
+                    className="absolute rounded-xl border border-white/10 shadow-xl object-cover"
+                    style={{ width: '80%', height: '90%', top: '5%', right: '-8px', transform: 'rotate(10deg)', zIndex: 1 }} />
+                  <img src="/landing/Layer system 2.png" alt="Layer 2"
+                    className="absolute rounded-xl border border-white/10 shadow-xl object-cover"
+                    style={{ width: '80%', height: '90%', top: '5%', right: '6px', transform: 'rotate(5deg)', zIndex: 2 }} />
+                  <img src="/landing/Layer system 3.png" alt="Layer 3"
+                    className="absolute rounded-xl border border-white/10 shadow-xl object-cover"
+                    style={{ width: '80%', height: '90%', top: '5%', right: '20px', transform: 'rotate(0deg)', zIndex: 3 }} />
+                </div>
               </div>
             </motion.div>
           </motion.div>
         </section>
-
-
 
         {/* ── BUILD IN PUBLIC ─────────────────────────── */}
 
