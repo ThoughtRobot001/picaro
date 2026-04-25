@@ -589,27 +589,26 @@ export default function LandingPage() {
               className="bg-[#0A0A0A] rounded-3xl border border-white/[0.08] p-7 flex flex-row gap-5 overflow-hidden"
               style={{ minHeight: '220px' }}
             >
-              {/* Left: text only */}
+              {/* Left: text + badge at bottom */}
               <div className="flex flex-col w-40 flex-shrink-0">
                 <div className="w-9 h-9 bg-teal-500/10 rounded-xl flex items-center justify-center mb-4 border border-teal-500/20">
                   <Lock size={16} className="text-teal-400" />
                 </div>
                 <h3 className="font-outfit text-lg font-bold mb-2">Character Lock</h3>
-                <p className="text-white/40 text-[12px] leading-relaxed">
+                <p className="text-white/40 text-[12px] leading-relaxed flex-1">
                   Save a character once. Draw them in any pose, any scene — Picora keeps them exactly who they are.
                 </p>
-              </div>
-              {/* Right: images + badge below */}
-              <div className="flex-1 flex flex-col gap-3 min-w-0">
-                <div className="flex gap-2 flex-1">
-                  <img src="/landing/Character lock 1.png" alt="Character 1" className="flex-1 rounded-xl object-cover border border-white/10 min-h-0" style={{ maxHeight: '150px' }} />
-                  <img src="/landing/Character lock 2.png" alt="Character 2" className="flex-1 rounded-xl object-cover border border-white/10 min-h-0" style={{ maxHeight: '150px' }} />
-                  <img src="/landing/Character lock 3.png" alt="Character 3" className="flex-1 rounded-xl object-cover border border-white/10 min-h-0" style={{ maxHeight: '150px' }} />
-                </div>
-                <div className="flex items-center gap-2">
+                {/* Badge at bottom of left column */}
+                <div className="flex items-center gap-2 mt-4">
                   <Check size={13} className="text-teal-400" />
                   <span className="text-[12px] text-teal-400 font-medium">Identity preserved</span>
                 </div>
+              </div>
+              {/* Right: 3 portrait images filling full height */}
+              <div className="flex-1 flex gap-2 min-w-0">
+                <img src="/landing/Character lock 1.png" alt="Character 1" className="flex-1 rounded-xl object-cover border border-white/10" style={{ minHeight: 0 }} />
+                <img src="/landing/Character lock 2.png" alt="Character 2" className="flex-1 rounded-xl object-cover border border-white/10" style={{ minHeight: 0 }} />
+                <img src="/landing/Character lock 3.png" alt="Character 3" className="flex-1 rounded-xl object-cover border border-white/10" style={{ minHeight: 0 }} />
               </div>
             </motion.div>
 
@@ -710,18 +709,18 @@ export default function LandingPage() {
                   Build scenes with multiple characters and objects without losing what makes each one unique.
                 </p>
               </div>
-              {/* Right: fanned layer images */}
-              <div className="flex-1 relative flex items-center justify-end pr-4 min-w-0">
-                <div className="relative w-full h-40">
-                  <img src="/landing/Layer system 1.png" alt="Layer 1"
+              {/* Right: fanned layer images - landscape images fanned */}
+              <div className="flex-1 relative flex items-center justify-center min-w-0">
+                <div className="relative w-full h-full">
+                  <img src="/landing/Layer 1.png" alt="Layer 1"
                     className="absolute rounded-xl border border-white/10 shadow-xl object-cover"
-                    style={{ width: '80%', height: '90%', top: '5%', right: '-8px', transform: 'rotate(10deg)', zIndex: 1 }} />
-                  <img src="/landing/Layer system 2.png" alt="Layer 2"
+                    style={{ width: '85%', height: '55%', bottom: '4%', right: '-4px', transform: 'rotate(8deg)', zIndex: 1, transformOrigin: 'bottom right' }} />
+                  <img src="/landing/Layer 2.png" alt="Layer 2"
                     className="absolute rounded-xl border border-white/10 shadow-xl object-cover"
-                    style={{ width: '80%', height: '90%', top: '5%', right: '6px', transform: 'rotate(5deg)', zIndex: 2 }} />
-                  <img src="/landing/Layer system 3.png" alt="Layer 3"
+                    style={{ width: '85%', height: '55%', bottom: '4%', right: '8px', transform: 'rotate(4deg)', zIndex: 2, transformOrigin: 'bottom right' }} />
+                  <img src="/landing/Layer 3.png" alt="Layer 3"
                     className="absolute rounded-xl border border-white/10 shadow-xl object-cover"
-                    style={{ width: '80%', height: '90%', top: '5%', right: '20px', transform: 'rotate(0deg)', zIndex: 3 }} />
+                    style={{ width: '85%', height: '55%', bottom: '4%', right: '20px', transform: 'rotate(0deg)', zIndex: 3, transformOrigin: 'bottom right' }} />
                 </div>
               </div>
             </motion.div>
