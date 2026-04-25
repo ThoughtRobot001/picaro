@@ -25,3 +25,8 @@ pre,
 .font-mono {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
+
+/* Explicit class for Outfit since it's not configured in Tailwind */
+.font-outfit {
+  font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+}
