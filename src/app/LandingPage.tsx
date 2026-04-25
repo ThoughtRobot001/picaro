@@ -451,73 +451,105 @@ export default function LandingPage() {
         </section>
 
         {/* ── INTERACTIVE DEMO ──────────────────────── */}
-        <section className="py-10 px-6 w-full max-w-6xl mx-auto relative z-20">
+        <section className="py-16 px-6 w-full max-w-5xl mx-auto relative z-20">
           <motion.div 
-            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
+            initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }}
             className="w-full flex flex-col items-center"
           >
-            <h2 className="font-outfit text-3xl font-bold mb-10">
+            <h2 className="font-outfit text-4xl md:text-5xl font-bold mb-4 text-center">
               The Magic in Your <span className="text-teal-400">Hands</span>
             </h2>
+            <p className="text-white/60 text-center max-w-2xl text-[15px] mb-12">
+              Draw a rough sketch, define your character, and let Picora do the rest. Your creations stay consistent, scene after scene.
+            </p>
             
-            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#0A0A0A] p-4 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
-              {/* Left pane: Canvas */}
-              <div className="flex flex-col gap-4">
-                {/* Toolbar */}
-                <div className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-white/[0.08] bg-[#111]">
-                  <div className="flex bg-white/5 p-1 rounded-xl">
-                    <button onClick={() => setActiveTool('brush')} className={`p-2 rounded-lg transition-all ${activeTool === 'brush' ? 'bg-white/10 text-white' : 'text-white/40'}`}><Brush size={14} /></button>
-                    <button onClick={() => setActiveTool('eraser')} className={`p-2 rounded-lg transition-all ${activeTool === 'eraser' ? 'bg-white/10 text-white' : 'text-white/40'}`}><Eraser size={14} /></button>
+            <div className="w-full bg-[#0A0A0A] rounded-[24px] border border-white/[0.08] shadow-2xl relative overflow-hidden flex flex-col md:flex-row">
+              
+              {/* Left pane: Canvas & Prompt */}
+              <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-white/[0.08]">
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-teal-400"></div>
+                    <span className="font-mono text-[11px] text-white/70 font-bold tracking-wider">SKETCH CANVAS</span>
                   </div>
-                  <div className="w-px h-6 bg-white/10 mx-2" />
-                  <div className="flex gap-1.5">
-                    {['#000000', '#ef4444', '#3b82f6', '#22c55e'].map(c => (
-                      <button key={c} onClick={() => { setBrushColor(c); setActiveTool('brush'); }} className={`w-6 h-6 rounded-full border-2 transition-all ${brushColor === c && activeTool === 'brush' ? 'border-white scale-110' : 'border-transparent'}`} style={{ background: c }} />
-                    ))}
+                  <div className="font-mono text-[10px] text-teal-500/70 bg-teal-500/10 px-2 py-1 rounded border border-teal-500/20">
+                    Seed: #88291
                   </div>
                 </div>
 
-                {/* Canvas Container */}
-                <div className="h-[300px] md:h-[400px]">
-                  <MiniCanvas canvasRef={canvasRef} activeTool={activeTool} brushSize={brushSize} brushColor={brushColor} />
+                {/* Canvas Area */}
+                <div className="relative h-[240px] w-full flex items-center justify-center border-b border-white/[0.08]">
+                  {/* Top left icon */}
+                  <div className="absolute top-4 left-4 w-8 h-8 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.02]">
+                    <Pencil size={14} className="text-teal-400" />
+                  </div>
+                  
+                  {/* Center placeholder */}
+                  <div className="flex flex-col items-center gap-3 opacity-40">
+                    <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center">
+                      <Pencil size={20} className="text-white/60" />
+                    </div>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50 font-bold">NEURAL LINK READY</span>
+                  </div>
+
+                  {/* Bottom right floating toolbar */}
+                  <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-[#111] border border-white/10 rounded-2xl p-1.5 shadow-lg">
+                    <button className="p-2 bg-white/10 rounded-xl text-white"><Pencil size={14} /></button>
+                    <button className="p-2 text-white/40 hover:text-white transition-colors"><Eraser size={14} /></button>
+                    <div className="w-px h-4 bg-white/10 mx-1"></div>
+                    <button className="p-2 text-white/40 hover:text-white transition-colors"><Undo2 size={14} /></button>
+                  </div>
                 </div>
 
-                {/* Prompt & Generate */}
-                <div className="flex flex-col gap-2 relative">
-                  <div className="absolute top-2 right-3 font-mono text-[10px] text-teal-500 uppercase tracking-wider bg-teal-500/10 px-2 py-0.5 rounded">Prompt</div>
+                {/* Descriptor Prompt */}
+                <div className="p-5 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-white/50 font-medium">Descriptor Prompt</span>
+                    <span className="text-[11px] text-teal-400 font-medium">AI Enforced</span>
+                  </div>
                   <textarea 
-                    className="w-full bg-[#111] border border-white/10 rounded-2xl p-4 text-[14px] text-white resize-none outline-none focus:border-teal-500/50 transition-colors"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl p-3 text-[13px] text-white/90 resize-none outline-none focus:border-teal-500/50 transition-colors placeholder:text-white/30"
                     rows={2}
-                    defaultValue="a young boy with red hair looking up at the stars"
+                    defaultValue="A cyberpunk nomad with a glowing mechanical visor and a leather jacket, cinematic lighting"
                     readOnly
                   />
                   <button 
                     onClick={handleGenerate} disabled={isGenerating}
-                    className="w-full h-12 rounded-xl font-mono text-[12px] uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-600 text-white hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] disabled:opacity-50"
+                    className="w-full h-12 mt-2 rounded-xl text-[14px] font-bold transition-all flex items-center justify-center gap-2 bg-[#0ea5e9] hover:bg-[#0284c7] text-white shadow-[0_0_20px_rgba(14,165,233,0.3)] disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #10b981 100%)' }}
                   >
-                    {isGenerating ? <><Loader2 size={16} className="animate-spin"/> Generating...</> : guestUsed ? "Sign up to keep generating" : "Generate with Picora"}
+                    {isGenerating ? <><Loader2 size={16} className="animate-spin"/> Generating...</> : <><Sparkles size={16} /> Generate Masterpiece</>}
                   </button>
                 </div>
               </div>
 
               {/* Right pane: Output */}
-              <div className="h-full min-h-[400px] bg-[#111] border border-white/10 rounded-2xl flex items-center justify-center relative overflow-hidden">
+              <div className="flex-1 bg-[#0A0A0A] flex flex-col items-center justify-center relative min-h-[400px]">
                 {generatedImage ? (
-                  <img src={generatedImage} alt="Generated Art" className="w-full h-full object-contain" />
+                  <img src={generatedImage} alt="Generated Art" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="flex flex-col items-center gap-4 text-white/30">
-                    <ImageIcon size={32} />
-                    <p className="font-mono text-[12px] uppercase tracking-wider">Your art appears here</p>
+                  <div className="flex flex-col items-center text-center px-6">
+                    <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center mb-6 shadow-inner">
+                      <ImageIcon size={28} className="text-white/20" />
+                    </div>
+                    <h3 className="text-white font-semibold text-lg mb-2">Awaiting your creation</h3>
+                    <p className="text-white/40 text-[13px] max-w-[240px] leading-relaxed">
+                      The AI is ready. Start drawing on the left to see the magic happen.
+                    </p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="mt-8 flex items-center gap-3">
+            <div className="mt-10 flex items-center gap-4">
               <div className="flex -space-x-3">
-                {[1,2,3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-[#050505] bg-teal-900" />)}
+                <img src="/landing/Layer 1.png" className="w-8 h-8 rounded-full border-2 border-[#050505] object-cover" />
+                <img src="/landing/Layer 2.png" className="w-8 h-8 rounded-full border-2 border-[#050505] object-cover" />
+                <img src="/landing/Layer 3.png" className="w-8 h-8 rounded-full border-2 border-[#050505] object-cover" />
+                <img src="/landing/Seed.png" className="w-8 h-8 rounded-full border-2 border-[#050505] object-cover" />
               </div>
-              <p className="font-mono text-[11px] text-white/40 uppercase tracking-wider">Joined by 10,000+ creators</p>
+              <p className="font-mono text-[11px] text-white/40">Join users like you.</p>
             </div>
           </motion.div>
         </section>
