@@ -1,11 +1,7 @@
-import React, { 
-  useRef, useEffect, useState, useCallback 
-} from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Sparkles, ArrowRight, Loader2,
-  Brush, Eraser, Minus, Plus,
-  Check, Zap, Users, Layers
+  Sparkles, ArrowRight, Loader2, Brush, Eraser, Minus, Plus, Check, Zap, Layers, Image as ImageIcon, Lock, UserPlus, Palette, Github, Twitter
 } from 'lucide-react';
 import { AuthModal } from '../components/auth/AuthModal';
 import { useAuth } from '../lib/useAuth';
@@ -16,8 +12,7 @@ function getGuestToken(): string {
   const key = 'picaro_guest_token';
   let token = localStorage.getItem(key);
   if (!token) {
-    token = `guest-${Date.now()}-${Math.random()
-      .toString(36).slice(2, 12)}`;
+    token = `guest-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
     localStorage.setItem(key, token);
   }
   return token;
@@ -51,9 +46,7 @@ function MiniCanvas({
     canvas.width = Math.round(width);
     canvas.height = Math.round(height);
 
-    const ctx = canvas.getContext('2d', { 
-      willReadFrequently: true 
-    });
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (ctx) {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -64,38 +57,28 @@ function MiniCanvas({
     offscreenRef.current.height = canvas.height;
   }, []);
 
-  const getCoords = (
-    e: React.PointerEvent<HTMLCanvasElement>
-  ) => {
+  const getCoords = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
     return {
-      x: (e.clientX - rect.left) * 
-        (canvas.width / rect.width),
-      y: (e.clientY - rect.top) * 
-        (canvas.height / rect.height),
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
     };
   };
 
-  const startDraw = (
-    e: React.PointerEvent<HTMLCanvasElement>
-  ) => {
+  const startDraw = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const coords = getCoords(e);
     if (!coords) return;
     isDrawing.current = true;
     e.currentTarget.setPointerCapture(e.pointerId);
 
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d', { 
-      willReadFrequently: true 
-    });
+    const ctx = canvas?.getContext('2d', { willReadFrequently: true });
     if (!ctx || !canvas) return;
 
     if (activeTool === 'brush') {
-      snapshotRef.current = ctx.getImageData(
-        0, 0, canvas.width, canvas.height
-      );
+      snapshotRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const off = offscreenRef.current;
       const offCtx = off?.getContext('2d');
       if (off && offCtx) {
@@ -109,17 +92,13 @@ function MiniCanvas({
     ctx.moveTo(coords.x, coords.y);
   };
 
-  const draw = (
-    e: React.PointerEvent<HTMLCanvasElement>
-  ) => {
+  const draw = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!isDrawing.current) return;
     const coords = getCoords(e);
     if (!coords) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d', { 
-      willReadFrequently: true 
-    });
+    const ctx = canvas?.getContext('2d', { willReadFrequently: true });
     if (!ctx || !canvas) return;
 
     ctx.lineCap = 'round';
@@ -157,9 +136,7 @@ function MiniCanvas({
     }
   };
 
-  const stopDraw = (
-    e: React.PointerEvent<HTMLCanvasElement>
-  ) => {
+  const stopDraw = (e: React.PointerEvent<HTMLCanvasElement>) => {
     isDrawing.current = false;
     e.currentTarget.releasePointerCapture(e.pointerId);
     const ctx = canvasRef.current?.getContext('2d');
@@ -169,7 +146,7 @@ function MiniCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full rounded-2xl overflow-hidden"
+      className="relative w-full h-full rounded-2xl overflow-hidden border border-white/5 shadow-inner"
       style={{ background: '#f8f8f8' }}
     >
       <canvas
@@ -181,9 +158,72 @@ function MiniCanvas({
         onPointerCancel={stopDraw}
       />
       <div className="absolute top-3 left-3 pointer-events-none">
-        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-black/20">
-          Draw anything
+        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-black/20 font-bold">
+          Draw Canvas
         </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── COMPARISON SLIDER ────────────────────────────────
+function ComparisonSlider() {
+  const [sliderPos, setSliderPos] = useState(50);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  const handleMove = useCallback((clientX: number) => {
+    if (!containerRef.current || !isDragging.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const pos = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+    setSliderPos(pos);
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    isDragging.current = true;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    handleMove(e.clientX);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    isDragging.current = false;
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+  };
+
+  return (
+    <div 
+      ref={containerRef}
+      className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-3xl overflow-hidden cursor-ew-resize select-none border border-white/10 bg-[#0A0A0A]"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+    >
+      {/* Before Image */}
+      <img src="/landing/Gemini_Generated_Image_y8z1b2y8z1b2y8z1 1.png" alt="Sketch" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+      
+      {/* After Image */}
+      <div 
+        className="absolute inset-0 w-full h-full"
+        style={{ clipPath: `inset(0 0 0 ${sliderPos}%)` }}
+      >
+        <img src="/landing/Gemini_Generated_Image_8bm6p8bm6p8bm6p8 1.png" alt="Rendered Art" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+      </div>
+
+      {/* Handle */}
+      <div 
+        className="absolute top-0 bottom-0 w-[3px] bg-gradient-to-b from-teal-400 to-emerald-500 shadow-[0_0_15px_rgba(20,184,166,0.8)]"
+        style={{ left: `${sliderPos}%` }}
+      >
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#111] flex items-center justify-center shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/20">
+          <div className="flex gap-1.5">
+            <div className="w-0.5 h-4 bg-white/40 rounded-full" />
+            <div className="w-0.5 h-4 bg-white/40 rounded-full" />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -198,7 +238,6 @@ function PricingCard({
   highlighted,
   cta,
   onCTA,
-  comingSoon,
 }: {
   name: string;
   price: string;
@@ -207,63 +246,45 @@ function PricingCard({
   highlighted?: boolean;
   cta: string;
   onCTA: () => void;
-  comingSoon?: string[];
 }) {
   return (
     <div
-      className={`relative flex flex-col rounded-2xl border p-6 ${
+      className={`relative flex flex-col rounded-3xl border p-8 transition-all duration-300 ${
         highlighted
-          ? 'border-emerald-500/40 bg-emerald-500/5'
-          : 'border-white/[0.08] bg-white/[0.02]'
-      }`}
+          ? 'border-teal-500/30 bg-[#0A0A0A]/80 hover:border-teal-500/50'
+          : 'border-white/[0.08] bg-[#0A0A0A]/50 hover:bg-[#0A0A0A]/80'
+      } backdrop-blur-xl`}
     >
       {highlighted && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold bg-emerald-500 text-white">
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+          <span className="px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-[0_0_20px_rgba(20,184,166,0.3)]">
             Most Popular
           </span>
         </div>
       )}
-      <div className="mb-4">
-        <h3 className="font-mono text-[11px] uppercase tracking-[0.15em] text-white/40 mb-1">
+      <div className="mb-6">
+        <h3 className="font-mono text-[13px] uppercase tracking-[0.1em] text-white/50 mb-3">
           {name}
         </h3>
         <div className="flex items-baseline gap-1">
-          <span className="text-3xl font-bold text-white">
+          <span className="text-4xl font-bold text-white font-outfit tracking-tight">
             {price}
           </span>
           {price !== 'Free' && (
-            <span className="text-white/30 text-sm">/mo</span>
+            <span className="text-white/40 text-sm font-medium">/mo</span>
           )}
         </div>
-        <p className="text-white/40 text-[13px] mt-1">
+        <p className="text-white/40 text-[14px] mt-3">
           {description}
         </p>
       </div>
 
-      <ul className="flex flex-col gap-2.5 mb-6 flex-1">
+      <ul className="flex flex-col gap-3.5 mb-8 flex-1">
         {features.map((f, i) => (
-          <li key={i} className="flex items-start gap-2">
-            <Check 
-              size={13} 
-              className="text-emerald-500 shrink-0 mt-0.5" 
-            />
-            <span className="text-white/60 text-[13px]">
+          <li key={i} className="flex items-start gap-3">
+            <Check size={16} className="text-teal-500 shrink-0 mt-0.5" />
+            <span className="text-white/70 text-[14px] leading-snug">
               {f}
-            </span>
-          </li>
-        ))}
-        {comingSoon?.map((f, i) => (
-          <li key={i} className="flex items-start gap-2 opacity-50">
-            <Zap 
-              size={13} 
-              className="text-amber-400 shrink-0 mt-0.5" 
-            />
-            <span className="text-white/40 text-[13px]">
-              {f} 
-              <span className="text-amber-400 text-[10px] ml-1 font-mono">
-                soon
-              </span>
             </span>
           </li>
         ))}
@@ -272,10 +293,10 @@ function PricingCard({
       <button
         type="button"
         onClick={onCTA}
-        className={`w-full h-10 rounded-xl font-mono text-[11px] uppercase tracking-wider font-bold transition-all ${
+        className={`w-full h-12 rounded-xl font-mono text-[12px] uppercase tracking-wider font-bold transition-all ${
           highlighted
-            ? 'bg-emerald-500 hover:bg-emerald-400 text-white'
-            : 'bg-white/[0.06] hover:bg-white/[0.10] text-white/70'
+            ? 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-[0_0_20px_rgba(20,184,166,0.2)] hover:scale-[1.02] active:scale-[0.98]'
+            : 'border border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]'
         }`}
       >
         {cta}
@@ -289,30 +310,22 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [activeTool, setActiveTool] = useState<
-    'brush' | 'eraser'
-  >('brush');
+  const [activeTool, setActiveTool] = useState<'brush' | 'eraser'>('brush');
   const [brushSize, setBrushSize] = useState(6);
   const [brushColor, setBrushColor] = useState('#000000');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState<
-    string | null
-  >(null);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [guestUsed, setGuestUsed] = useState(
     localStorage.getItem(GUEST_USED_KEY) === 'true'
   );
-  const [error, setError] = useState<string | null>(null);
 
-  // If user is already logged in, redirect to app
   useEffect(() => {
     if (user) navigate('/app');
   }, [user, navigate]);
 
   const handleGenerate = async () => {
     if (isGenerating) return;
-
-    // If guest already used their free generation
     if (guestUsed) {
       setAuthOpen(true);
       return;
@@ -321,7 +334,6 @@ export default function LandingPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Export canvas with white background
     const exportCanvas = document.createElement('canvas');
     exportCanvas.width = canvas.width;
     exportCanvas.height = canvas.height;
@@ -333,7 +345,6 @@ export default function LandingPage() {
 
     const guestToken = getGuestToken();
     setIsGenerating(true);
-    setError(null);
 
     try {
       const response = await fetch(
@@ -341,577 +352,369 @@ export default function LandingPage() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sketchDataURL: dataURL,
-            guestToken,
-          }),
+          body: JSON.stringify({ sketchDataURL: dataURL, guestToken }),
         }
       );
 
       const data = await response.json();
-
       if (data.success && data.imageURL) {
         setGeneratedImage(data.imageURL);
         localStorage.setItem(GUEST_USED_KEY, 'true');
         setGuestUsed(true);
       } else if (data.error === 'GUEST_LIMIT_REACHED') {
         setAuthOpen(true);
-      } else {
-        setError('Generation failed. Please try again.');
       }
     } catch {
-      setError('Something went wrong. Please try again.');
+      // silently fail on landing
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-
   return (
     <div 
-      className="min-h-screen bg-[#050506] text-white relative"
-      style={{ fontFamily: 'Inter, sans-serif' }}
+      className="min-h-screen bg-[#050505] text-white font-inter selection:bg-teal-500/30 overflow-x-hidden relative"
     >
-      {/* ── BACKGROUND VIDEO ────────────────────────── */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="fixed inset-0 w-full h-full object-cover z-0 opacity-20"
-      >
-        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_115655_b4d9cd77-feed-43cd-a198-af78ebdf1f7a.mp4" type="video/mp4" />
-      </video>
-      <div className="fixed inset-0 bg-[#050506]/80 z-0 pointer-events-none" />
+      {/* GLOBAL GLOWS */}
+      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] bg-teal-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+      <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+      <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none z-0" />
 
-      <div className="relative z-10 flex flex-col min-h-screen">
-        {/* ── NAV ─────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 border-b border-white/[0.06] bg-[#050506]/80 backdrop-blur-xl">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[15px] font-bold tracking-tight text-white">
-            Picora
-          </span>
-          <span className="font-mono text-[15px] font-bold tracking-tight text-emerald-500">
-            .art
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setAuthOpen(true)}
-            className="px-4 h-8 rounded-lg font-mono text-[11px] uppercase tracking-wider text-white/50 hover:text-white transition-colors"
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => setAuthOpen(true)}
-            className="px-4 h-8 rounded-lg font-mono text-[11px] uppercase tracking-wider font-bold transition-all"
-            style={{
-              background: 
-                'linear-gradient(135deg, #12b76a 0%, #0ea5e9 100%)',
-              color: '#fff',
-            }}
-          >
-            Get Started Free
-          </button>
+      {/* ── NAV ─────────────────────────────────────── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 border-b border-white/[0.04] bg-[#050505]/70 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-1.5 cursor-pointer">
+              <span className="font-outfit text-xl font-bold tracking-tight text-white">
+                Picora
+              </span>
+            </div>
+            <div className="hidden md:flex items-center gap-6">
+              {['Features', 'Use Cases', 'Pricing'].map(link => (
+                <a key={link} href={`#${link.toLowerCase().replace(' ', '-')}`} className="text-[13px] font-medium text-white/50 hover:text-white transition-colors">
+                  {link}
+                </a>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              className="text-[13px] font-medium text-white/60 hover:text-white transition-colors"
+            >
+              Log in
+            </button>
+            <button
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              className="px-4 h-9 rounded-xl font-mono text-[11px] uppercase tracking-wider font-bold transition-all bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-[0_0_15px_rgba(20,184,166,0.15)] hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] hover:scale-[1.02]"
+            >
+              Get Started Free
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* ── HERO ────────────────────────────────────── */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          
-          {/* Headline */}
+      <main className="relative z-10 flex flex-col items-center w-full">
+        
+        {/* ── HERO ────────────────────────────────────── */}
+        <section className="pt-40 pb-20 px-6 w-full max-w-7xl mx-auto text-center flex flex-col items-center relative">
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
+            className="flex flex-col items-center"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 mb-6">
-              <Sparkles size={12} className="text-emerald-500" />
-              <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">
-                AI-powered sketch to art
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-500/20 bg-teal-500/10 mb-8">
+              <Sparkles size={12} className="text-teal-400" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-teal-400 font-medium">
+                AI-Powered Sketch To Art
               </span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4 leading-[1.1]">
-              Turn rough sketches into
-              <br />
-              <span 
-                className="bg-clip-text text-transparent"
-                style={{
-                  backgroundImage: 
-                    'linear-gradient(135deg, #12b76a 0%, #0ea5e9 100%)',
-                }}
-              >
-                stunning art
+            <h1 className="font-outfit text-6xl md:text-8xl font-bold tracking-tight mb-6 leading-[1.05]">
+              Keep the same identity.<br/>
+              <span className="bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">
+                Across every scene.
               </span>
             </h1>
-            <p className="text-white/40 text-lg max-w-xl mx-auto leading-relaxed">
-              Draw anything. Choose a style. Watch AI transform 
-              your sketch into professional artwork in seconds. 
-              No art skills required.
+            <p className="text-white/40 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10 font-medium">
+              Draw anything. Choose a style. Watch AI transform your sketch into professional artwork in seconds. No art skills required.
             </p>
-          </motion.div>
-
-          {/* Interactive Demo */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto"
-          >
-            
-            {/* Left — Canvas */}
-            <div className="flex flex-col gap-3">
-              {/* Mini toolbar */}
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.03]">
-                <button
-                  type="button"
-                  onClick={() => setActiveTool('brush')}
-                  className={`flex items-center gap-1.5 px-2.5 h-7 rounded-lg font-mono text-[10px] uppercase tracking-wider transition-all ${
-                    activeTool === 'brush'
-                      ? 'bg-white/10 text-white'
-                      : 'text-white/30 hover:text-white/60'
-                  }`}
-                >
-                  <Brush size={11} />
-                  Brush
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTool('eraser')}
-                  className={`flex items-center gap-1.5 px-2.5 h-7 rounded-lg font-mono text-[10px] uppercase tracking-wider transition-all ${
-                    activeTool === 'eraser'
-                      ? 'bg-white/10 text-white'
-                      : 'text-white/30 hover:text-white/60'
-                  }`}
-                >
-                  <Eraser size={11} />
-                  Eraser
-                </button>
-                <div className="w-px h-4 bg-white/10 mx-1" />
-                {/* Color swatches */}
-                {['#000000', '#ef4444', '#3b82f6', '#22c55e'].map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => {
-                      setBrushColor(c);
-                      setActiveTool('brush');
-                    }}
-                    className={`w-5 h-5 rounded-full border-2 transition-all ${
-                      brushColor === c && activeTool === 'brush'
-                        ? 'border-white scale-110'
-                        : 'border-transparent'
-                    }`}
-                    style={{ background: c }}
-                  />
-                ))}
-                <div className="w-px h-4 bg-white/10 mx-1" />
-                {/* Size */}
-                <button
-                  type="button"
-                  onClick={() => setBrushSize(
-                    Math.max(2, brushSize - 2)
-                  )}
-                  className="w-6 h-6 rounded flex items-center justify-center text-white/30 hover:text-white transition-colors"
-                >
-                  <Minus size={10} />
-                </button>
-                <span className="font-mono text-[10px] text-white/30 w-6 text-center">
-                  {brushSize}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setBrushSize(
-                    Math.min(20, brushSize + 2)
-                  )}
-                  className="w-6 h-6 rounded flex items-center justify-center text-white/30 hover:text-white transition-colors"
-                >
-                  <Plus size={10} />
-                </button>
-              </div>
-
-              {/* Canvas */}
-              <div className="h-72 md:h-80 rounded-2xl overflow-hidden border border-white/[0.08]">
-                <MiniCanvas
-                  canvasRef={canvasRef}
-                  activeTool={activeTool}
-                  brushSize={brushSize}
-                  brushColor={brushColor}
-                />
-              </div>
-
-              {/* Generate button */}
-              <button
-                type="button"
-                disabled={isGenerating}
-                onClick={handleGenerate}
-                className="w-full h-12 rounded-xl font-mono text-[12px] uppercase tracking-wider font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
-                style={{
-                  background: isGenerating
-                    ? '#0d9756'
-                    : 'linear-gradient(135deg, #12b76a 0%, #0ea5e9 100%)',
-                  color: '#fff',
-                  boxShadow: isGenerating
-                    ? 'none'
-                    : '0 0 24px rgba(18,183,106,0.3)',
-                }}
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    Generating...
-                  </>
-                ) : guestUsed ? (
-                  <>
-                    <Sparkles size={14} />
-                    Sign Up to Keep Creating
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={14} />
-                    Generate from Sketch — Free
-                  </>
-                )}
+            <div className="flex items-center gap-4">
+              <button onClick={() => setAuthOpen(true)} className="px-8 h-14 rounded-2xl font-outfit text-[16px] font-bold transition-all bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)] hover:shadow-[0_0_40px_rgba(20,184,166,0.4)] hover:scale-[1.02]">
+                Try Picora for Free
               </button>
-
-              {error && (
-                <p className="text-red-400 text-[12px] font-mono text-center">
-                  {error}
-                </p>
-              )}
+              <button className="px-8 h-14 rounded-2xl font-outfit text-[16px] font-bold transition-all border border-white/10 bg-white/[0.02] text-white hover:bg-white/[0.06]">
+                See Pricing
+              </button>
             </div>
+          </motion.div>
+        </section>
 
-            {/* Right — Output */}
-            <div className="h-72 md:h-full min-h-[20rem] rounded-2xl border border-white/[0.08] overflow-hidden relative"
-              style={{ background: '#0c0c0c' }}
-            >
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  backgroundImage:
-                    'radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)',
-                  backgroundSize: '20px 20px',
-                }}
-              />
-              {generatedImage ? (
-                <div className="absolute inset-0 flex flex-col">
-                  <img
-                    src={generatedImage}
-                    alt="AI generated"
-                    className="w-full h-full object-contain"
+        {/* ── INTERACTIVE DEMO ──────────────────────── */}
+        <section className="py-10 px-6 w-full max-w-6xl mx-auto relative z-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
+            className="w-full flex flex-col items-center"
+          >
+            <h2 className="font-outfit text-3xl font-bold mb-10">
+              The Magic in Your <span className="text-teal-400">Hands</span>
+            </h2>
+            
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#0A0A0A] p-4 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+              {/* Left pane: Canvas */}
+              <div className="flex flex-col gap-4">
+                {/* Toolbar */}
+                <div className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-white/[0.08] bg-[#111]">
+                  <div className="flex bg-white/5 p-1 rounded-xl">
+                    <button onClick={() => setActiveTool('brush')} className={`p-2 rounded-lg transition-all ${activeTool === 'brush' ? 'bg-white/10 text-white' : 'text-white/40'}`}><Brush size={14} /></button>
+                    <button onClick={() => setActiveTool('eraser')} className={`p-2 rounded-lg transition-all ${activeTool === 'eraser' ? 'bg-white/10 text-white' : 'text-white/40'}`}><Eraser size={14} /></button>
+                  </div>
+                  <div className="w-px h-6 bg-white/10 mx-2" />
+                  <div className="flex gap-1.5">
+                    {['#000000', '#ef4444', '#3b82f6', '#22c55e'].map(c => (
+                      <button key={c} onClick={() => { setBrushColor(c); setActiveTool('brush'); }} className={`w-6 h-6 rounded-full border-2 transition-all ${brushColor === c && activeTool === 'brush' ? 'border-white scale-110' : 'border-transparent'}`} style={{ background: c }} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Canvas Container */}
+                <div className="h-[300px] md:h-[400px]">
+                  <MiniCanvas canvasRef={canvasRef} activeTool={activeTool} brushSize={brushSize} brushColor={brushColor} />
+                </div>
+
+                {/* Prompt & Generate */}
+                <div className="flex flex-col gap-2 relative">
+                  <div className="absolute top-2 right-3 font-mono text-[10px] text-teal-500 uppercase tracking-wider bg-teal-500/10 px-2 py-0.5 rounded">Prompt</div>
+                  <textarea 
+                    className="w-full bg-[#111] border border-white/10 rounded-2xl p-4 text-[14px] text-white resize-none outline-none focus:border-teal-500/50 transition-colors"
+                    rows={2}
+                    defaultValue="a young boy with red hair looking up at the stars"
+                    readOnly
                   />
-                  <div className="absolute bottom-3 left-0 right-0 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setAuthOpen(true)}
-                      className="flex items-center gap-2 px-4 h-9 rounded-xl font-mono text-[11px] uppercase tracking-wider font-bold transition-all"
-                      style={{
-                        background: 
-                          'linear-gradient(135deg, #12b76a 0%, #0ea5e9 100%)',
-                        color: '#fff',
-                        boxShadow: 
-                          '0 0 20px rgba(18,183,106,0.4)',
-                      }}
-                    >
-                      <ArrowRight size={13} />
-                      Continue Creating Free
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
-                  <div className="w-12 h-12 rounded-2xl border border-white/[0.06] flex items-center justify-center mb-2"
-                    style={{ background: '#111' }}
+                  <button 
+                    onClick={handleGenerate} disabled={isGenerating}
+                    className="w-full h-12 rounded-xl font-mono text-[12px] uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-600 text-white hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] disabled:opacity-50"
                   >
-                    <Sparkles size={20} className="text-white/20" />
-                  </div>
-                  <p className="font-mono text-[12px] text-white/30 uppercase tracking-wider">
-                    Your art appears here
-                  </p>
-                  <p className="text-white/15 text-[11px] max-w-[200px]">
-                    Draw something on the canvas and click Generate
-                  </p>
+                    {isGenerating ? <><Loader2 size={16} className="animate-spin"/> Generating...</> : guestUsed ? "Sign up to keep generating" : "Generate with Picora"}
+                  </button>
                 </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ────────────────────────────── */}
-      <section className="py-20 px-6 border-t border-white/[0.06]">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className="text-3xl font-bold mb-3"
-          >
-            How it works
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ delay: 0.1 }}
-            className="text-white/30 mb-12 text-[15px]"
-          >
-            From rough sketch to finished art in three steps
-          </motion.p>
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: { staggerChildren: 0.15 }
-              }
-            }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
-            {[
-              {
-                step: '01',
-                title: 'Draw',
-                desc: 'Sketch anything on the canvas. It doesn\'t need to be perfect — just communicate the idea.',
-                icon: Brush,
-              },
-              {
-                step: '02',
-                title: 'Generate',
-                desc: 'Choose a style and click Generate. AI transforms your sketch into professional artwork in seconds.',
-                icon: Sparkles,
-              },
-              {
-                step: '03',
-                title: 'Refine',
-                desc: 'Not quite right? Use the prompt box to refine. "Make it blue" or "add rain" — iterate until perfect.',
-                icon: Zap,
-              },
-            ].map((item) => (
-              <motion.div
-                key={item.step}
-                variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  visible: { opacity: 1, y: 0 }
-                }}
-                className="flex flex-col items-center text-center p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02]"
-              >
-                <div className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center mb-4"
-                  style={{ background: '#111' }}
-                >
-                  <item.icon size={18} className="text-emerald-500" />
-                </div>
-                <span className="font-mono text-[10px] text-white/20 uppercase tracking-wider mb-2">
-                  Step {item.step}
-                </span>
-                <h3 className="text-lg font-bold mb-2">
-                  {item.title}
-                </h3>
-                <p className="text-white/40 text-[13px] leading-relaxed">
-                  {item.desc}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── COMING SOON — LAYERS ────────────────────── */}
-      <section className="py-20 px-6 border-t border-white/[0.06]">
-        <div className="max-w-4xl mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 30 }}
-            whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.5 }}
-            className="relative rounded-2xl border border-amber-500/20 bg-amber-500/5 p-8 md:p-12 overflow-hidden"
-          >
-            <div className="absolute top-4 right-4">
-              <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider border border-amber-500/30 text-amber-400">
-                Coming Soon
-              </span>
-            </div>
-            <div className="flex flex-col md:flex-row gap-8 items-center">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <Layers size={20} className="text-amber-400" />
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-amber-400">
-                    Layers + Multi-Character Seeds
-                  </span>
-                </div>
-                <h2 className="text-3xl font-bold mb-4">
-                  Multiple characters.
-                  <br />
-                  One scene.
-                </h2>
-                <p className="text-white/40 text-[15px] leading-relaxed mb-6">
-                  Assign a different character seed to each layer. 
-                  Generate each element independently, then composite 
-                  into a single scene. Place your hero and villain 
-                  in the same panel — both perfectly consistent.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setAuthOpen(true)}
-                  className="flex items-center gap-2 px-5 h-10 rounded-xl font-mono text-[11px] uppercase tracking-wider font-bold border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-colors"
-                >
-                  Get early access
-                  <ArrowRight size={13} />
-                </button>
               </div>
-              {/* Visual mockup */}
-              <div className="w-full md:w-64 flex flex-col gap-2">
-                {[
-                  { name: 'Hero', seed: 'Wang', color: '#3b82f6' },
-                  { name: 'Villain', seed: 'Dark Knight', color: '#ef4444' },
-                  { name: 'Background', seed: 'None', color: '#6b7280' },
-                ].map((layer, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/[0.06] bg-white/[0.03]"
-                  >
-                    <div
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ background: layer.color }}
-                    />
-                    <span className="font-mono text-[11px] text-white/60 flex-1">
-                      {layer.name}
-                    </span>
-                    <span className="font-mono text-[10px] px-2 py-0.5 rounded-md border border-white/10 text-white/30">
-                      {layer.seed}
-                    </span>
+
+              {/* Right pane: Output */}
+              <div className="h-full min-h-[400px] bg-[#111] border border-white/10 rounded-2xl flex items-center justify-center relative overflow-hidden">
+                {generatedImage ? (
+                  <img src={generatedImage} alt="Generated Art" className="w-full h-full object-contain" />
+                ) : (
+                  <div className="flex flex-col items-center gap-4 text-white/30">
+                    <ImageIcon size={32} />
+                    <p className="font-mono text-[12px] uppercase tracking-wider">Your art appears here</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
-          </motion.div>
-        </div>
-      </section>
 
-      {/* ── PRICING ─────────────────────────────────── */}
-      <section className="py-20 px-6 border-t border-white/[0.06]">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className="text-3xl font-bold mb-3"
-          >
-            Simple pricing
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ delay: 0.1 }}
-            className="text-white/30 mb-12 text-[15px]"
-          >
-            Start free. Upgrade when you need more.
-          </motion.p>
+            <div className="mt-8 flex items-center gap-3">
+              <div className="flex -space-x-3">
+                {[1,2,3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-[#050505] bg-teal-900" />)}
+              </div>
+              <p className="font-mono text-[11px] text-white/40 uppercase tracking-wider">Joined by 10,000+ creators</p>
+            </div>
+          </motion.div>
+        </section>
+
+        {/* ── SLIDER SECTION ──────────────────────────── */}
+        <section id="features" className="py-24 px-6 w-full max-w-5xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} className="text-center mb-16">
+            <h2 className="font-outfit text-4xl md:text-5xl font-bold mb-4">
+              From rough sketch → <span className="text-emerald-400">finished art.</span>
+            </h2>
+            <p className="text-white/40 text-lg">High-fidelity rendering powered by advanced AI models.</p>
+          </motion.div>
+          <ComparisonSlider />
+        </section>
+
+        {/* ── CHARACTER LOCK ──────────────────────────── */}
+        <section className="py-24 px-6 w-full max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-100px" }}>
+              <div className="inline-block px-3 py-1 bg-white/5 border border-white/10 rounded-full font-mono text-[10px] text-white/60 uppercase tracking-widest mb-6">
+                IDENTITY ENGINE
+              </div>
+              <h2 className="font-outfit text-4xl md:text-5xl font-bold mb-6 leading-tight">
+                Keep the same character.<br/>
+                <span className="text-white/40">Every single time.</span>
+              </h2>
+              <p className="text-white/50 text-lg leading-relaxed mb-8 max-w-md">
+                Lock in your character's DNA. Generate them in any pose, any style, and any environment. Perfect for storyboarding, comics, and game assets.
+              </p>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-100px" }} className="grid grid-cols-2 gap-4">
+              <img src="/landing/ChatGPT Image Apr 25, 2026, 01_59_09 PM 1.png" alt="Vanellope 1" className="rounded-2xl border border-white/10 w-full object-cover aspect-square bg-[#0A0A0A]" />
+              <img src="/landing/ChatGPT Image Apr 25, 2026, 01_59_16 PM 1.png" alt="Vanellope 2" className="rounded-2xl border border-white/10 w-full object-cover aspect-square bg-[#0A0A0A]" />
+              <img src="/landing/ChatGPT Image Apr 25, 2026, 01_59_22 PM 1.png" alt="Vanellope 3" className="rounded-2xl border border-white/10 w-full object-cover aspect-square bg-[#0A0A0A]" />
+              <img src="/landing/Gemini_Generated_Image_8zch358zch358zch 1.png" alt="Vanellope 4" className="rounded-2xl border border-white/10 w-full object-cover aspect-square bg-[#0A0A0A]" />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ── BENTO GRID FEATURES ─────────────────────── */}
+        <section id="use-cases" className="py-24 px-6 w-full max-w-6xl mx-auto">
           <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: { staggerChildren: 0.15 }
-              }
-            }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }}
+            variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-              <PricingCard
+            {/* 1. Character Lock */}
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="lg:col-span-2 bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col justify-between overflow-hidden relative group">
+              <div className="relative z-10 mb-8">
+                <div className="w-10 h-10 bg-teal-500/10 rounded-xl flex items-center justify-center mb-4 border border-teal-500/20"><Lock size={18} className="text-teal-400" /></div>
+                <h3 className="font-outfit text-2xl font-bold mb-2">Character Lock</h3>
+                <p className="text-white/40">Preserve facial features, clothing, and proportions flawlessly across infinite generations.</p>
+              </div>
+              <div className="w-full bg-[#111] rounded-2xl border border-white/5 p-4 flex gap-4 overflow-hidden mt-auto">
+                {/* Mockup visual */}
+                <img src="/landing/Gemini_Generated_Image_y6lmvfy6lmvfy6lm 1.png" alt="Demo" className="w-1/3 rounded-xl border border-white/10 object-cover" />
+                <img src="/landing/Gemini_Generated_Image_kyk89ekyk89ekyk8 2.png" alt="Demo" className="w-1/3 rounded-xl border border-white/10 object-cover" />
+                <img src="/landing/Gemini_Generated_Image_w241e1w241e1w241 3.png" alt="Demo" className="w-1/3 rounded-xl border border-white/10 object-cover" />
+              </div>
+            </motion.div>
+
+            {/* 2. Multi-Character */}
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col justify-between overflow-hidden relative group">
+              <div className="relative z-10 mb-8">
+                <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-4 border border-emerald-500/20"><UserPlus size={18} className="text-emerald-400" /></div>
+                <h3 className="font-outfit text-2xl font-bold mb-2">Multi-Character</h3>
+                <p className="text-white/40">Assign specific seeds to different layers in the same scene.</p>
+              </div>
+              <div className="w-full bg-[#111] rounded-2xl border border-white/5 p-4 flex flex-col gap-2 mt-auto relative">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/10" />
+                  <div className="h-2 bg-teal-500 rounded-full flex-1" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/10" />
+                  <div className="h-2 bg-emerald-500 rounded-full w-1/2" />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* 3. Any Pose */}
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col justify-between overflow-hidden relative group">
+              <div className="relative z-10 mb-8">
+                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4 border border-blue-500/20"><Users size={18} className="text-blue-400" /></div>
+                <h3 className="font-outfit text-2xl font-bold mb-2">Any Pose</h3>
+                <p className="text-white/40">Direct your character's action with simple stick-figure sketches.</p>
+              </div>
+            </motion.div>
+
+            {/* 4. Any Style */}
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="lg:col-span-2 bg-[#0A0A0A] rounded-3xl border border-white/10 p-8 flex flex-col justify-between overflow-hidden relative group">
+              <div className="relative z-10 mb-8">
+                <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center mb-4 border border-purple-500/20"><Palette size={18} className="text-purple-400" /></div>
+                <h3 className="font-outfit text-2xl font-bold mb-2">Any Style</h3>
+                <p className="text-white/40">From photorealism to anime to 3D render. One click transforms the aesthetic without losing the identity.</p>
+              </div>
+              <div className="flex gap-4 overflow-hidden mt-auto">
+                <img src="/landing/Gemini_Generated_Image_g6qqmvg6qqmvg6qq 1.png" alt="Style 1" className="w-48 h-32 rounded-xl object-cover border border-white/10" />
+                <img src="/landing/Gemini_Generated_Image_u9rml5u9rml5u9rm 1.png" alt="Style 2" className="w-48 h-32 rounded-xl object-cover border border-white/10" />
+              </div>
+            </motion.div>
+          </motion.div>
+        </section>
+
+        {/* ── BUILD IN PUBLIC ─────────────────────────── */}
+        <section className="py-12 px-6 w-full max-w-4xl mx-auto">
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#111] to-[#0A0A0A] p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[100px] rounded-full pointer-events-none" />
+            <div className="relative z-10">
+              <h2 className="font-outfit text-3xl font-bold mb-2">Build in Public.</h2>
+              <p className="text-white/40">Join our community to shape the future of AI artistry.</p>
+            </div>
+            <div className="flex gap-4 relative z-10">
+              <button className="flex items-center gap-2 px-5 h-12 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors font-medium">
+                <Github size={18} /> GitHub
+              </button>
+              <button className="flex items-center gap-2 px-5 h-12 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors font-medium">
+                <Twitter size={18} /> Twitter
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ── PRICING ─────────────────────────────────── */}
+        <section id="pricing" className="py-24 px-6 w-full max-w-6xl mx-auto relative">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
+          
+          <div className="text-center mb-16 relative z-10">
+            <h2 className="font-outfit text-4xl md:text-5xl font-bold mb-4">
+              Simple, outcome-focused <span className="text-teal-400">pricing.</span>
+            </h2>
+            <p className="text-white/40 text-lg">Start free. Upgrade when you need more power.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+            <PricingCard
               name="Free"
-              price="Free"
-              description="Try it out"
-              features={[
-                '10 generations per month',
-                '3 character seed slots',
-                'All 6 art styles',
-                'Export as PNG',
-              ]}
-              cta="Get Started Free"
+              price="$0"
+              description="For exploring"
+              features={['10 generations per month', '3 character seed slots', 'Standard export']}
+              cta="Get Started"
               onCTA={() => setAuthOpen(true)}
-              />
-            </motion.div>
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-              <PricingCard
+            />
+            <PricingCard
               name="Starter"
-              price="$15"
+              price="$19"
               description="For regular creators"
-              features={[
-                '80 generations per month',
-                'Unlimited refinements',
-                '5 character seed slots',
-                'No watermark',
-                'HD export',
-              ]}
-              comingSoon={[
-                'Layer system (multi-character)',
-              ]}
+              features={['80 generations per month', 'Unlimited refinements', '5 character seed slots', 'No watermark', 'HD export']}
               highlighted
-              cta="Start Creating"
+              cta="Go Pro"
               onCTA={() => setAuthOpen(true)}
-              />
-            </motion.div>
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-              <PricingCard
+            />
+            <PricingCard
               name="Creator"
-              price="$35"
+              price="$49"
               description="For power users"
-              features={[
-                '250 generations per month',
-                'Unlimited refinements',
-                '25 character seed slots',
-                'Commercial license',
-                'Priority speed',
-              ]}
-              comingSoon={[
-                'Layer system (multi-character)',
-                'Seed strength control',
-                'API access',
-              ]}
+              features={['250 generations per month', 'Unlimited refinements', '25 character seed slots', 'Commercial license', 'Priority speed']}
+              cta="Contact Sales"
               onCTA={() => setAuthOpen(true)}
-              />
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
+            />
+          </div>
+        </section>
+      </main>
 
       {/* ── FOOTER ──────────────────────────────────── */}
-      <footer className="py-10 px-6 border-t border-white/[0.06]">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-1">
-            <span className="font-mono text-[13px] font-bold text-white/60">
-              Picora
-            </span>
-            <span className="font-mono text-[13px] font-bold text-emerald-500/60">
-              .art
-            </span>
+      <footer className="border-t border-white/[0.04] bg-[#050505] py-12 px-6 relative z-10">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+          <div className="col-span-1 md:col-span-2">
+            <div className="flex items-center gap-1.5 mb-4">
+              <span className="font-outfit text-xl font-bold tracking-tight text-white">Picora</span>
+            </div>
+            <p className="text-white/30 text-sm max-w-xs">
+              AI-powered art generation with perfect identity retention across any style.
+            </p>
           </div>
+          <div className="flex flex-col gap-3">
+            <h4 className="font-mono text-[11px] text-white/50 uppercase tracking-wider mb-2">Product</h4>
+            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">Features</a>
+            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">Use Cases</a>
+            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">Pricing</a>
+          </div>
+          <div className="flex flex-col gap-3">
+            <h4 className="font-mono text-[11px] text-white/50 uppercase tracking-wider mb-2">Company</h4>
+            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">Twitter</a>
+            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">Discord</a>
+            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">GitHub</a>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="font-mono text-[11px] text-white/20 uppercase tracking-wider">
-            © 2026 Picora.art · Turn sketches into art
+            © 2026 Picora.art
           </p>
         </div>
       </footer>
-      </div>
 
       {/* Auth Modal */}
-      <AuthModal
-        isOpen={authOpen}
-        onClose={() => setAuthOpen(false)}
-        onSuccess={() => navigate('/app')}
-      />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} onSuccess={() => navigate('/app')} />
     </div>
   );
 }
