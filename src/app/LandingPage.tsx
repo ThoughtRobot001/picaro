@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Sparkles, ArrowRight, Loader2, Brush, Eraser, Minus, Plus, Check, Zap, Layers, Image as ImageIcon, Lock, UserPlus, Users, Palette, Github, Twitter
+  Sparkles, ArrowRight, Loader2, Brush, Eraser, Minus, Plus, Check, Zap, Layers, Image as ImageIcon, Lock, UserPlus, Users, Palette, Github, Twitter, Instagram, ArrowUpRight
 } from 'lucide-react';
 import { AuthModal } from '../components/auth/AuthModal';
 import { useAuth } from '../lib/useAuth';
@@ -233,6 +233,8 @@ function ComparisonSlider() {
 function PricingCard({
   name,
   price,
+  yearlyPrice,
+  isYearly,
   description,
   features,
   highlighted,
@@ -241,6 +243,8 @@ function PricingCard({
 }: {
   name: string;
   price: string;
+  yearlyPrice: string;
+  isYearly: boolean;
   description: string;
   features: string[];
   highlighted?: boolean;
@@ -249,54 +253,45 @@ function PricingCard({
 }) {
   return (
     <div
-      className={`relative flex flex-col rounded-3xl border p-8 transition-all duration-300 ${
+      className={`relative flex flex-col rounded-[32px] border p-8 transition-all duration-500 ${
         highlighted
-          ? 'border-teal-500/30 bg-[#0A0A0A]/80 hover:border-teal-500/50'
-          : 'border-white/[0.08] bg-[#0A0A0A]/50 hover:bg-[#0A0A0A]/80'
-      } backdrop-blur-xl`}
+          ? 'border-teal-500 bg-[#050505] shadow-[0_0_40px_rgba(20,184,166,0.1)] scale-105 z-10'
+          : 'border-white/5 bg-[#050505] hover:border-white/10'
+      }`}
     >
       {highlighted && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-          <span className="px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-[0_0_20px_rgba(20,184,166,0.3)]">
-            Most Popular
-          </span>
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-teal-500 px-4 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] text-black">
+          Most Popular
         </div>
       )}
-      <div className="mb-6">
-        <h3 className="font-mono text-[13px] uppercase tracking-[0.1em] text-white/50 mb-3">
-          {name}
-        </h3>
-        <div className="flex items-baseline gap-1">
-          <span className="text-4xl font-bold text-white font-outfit tracking-tight">
-            {price}
-          </span>
-          {price !== 'Free' && (
-            <span className="text-white/40 text-sm font-medium">/mo</span>
-          )}
-        </div>
-        <p className="text-white/40 text-[14px] mt-3">
-          {description}
-        </p>
+      
+      <div className="mb-8">
+        <h3 className="font-outfit text-2xl font-bold text-white mb-2">{name}</h3>
+        <p className="text-white/40 text-sm leading-relaxed">{description}</p>
       </div>
 
-      <ul className="flex flex-col gap-3.5 mb-8 flex-1">
-        {features.map((f, i) => (
-          <li key={i} className="flex items-start gap-3">
-            <Check size={16} className="text-teal-500 shrink-0 mt-0.5" />
-            <span className="text-white/70 text-[14px] leading-snug">
-              {f}
-            </span>
-          </li>
+      <div className="mb-8 flex items-baseline gap-1">
+        <span className="font-outfit text-4xl font-bold text-white">
+          {isYearly ? yearlyPrice : price}
+        </span>
+        <span className="text-white/30 text-sm">/mo</span>
+      </div>
+
+      <div className="flex-1 flex flex-col gap-4 mb-10">
+        {features.map((feature, i) => (
+          <div key={i} className="flex items-start gap-3">
+            <Check size={16} className="text-teal-500 mt-0.5 shrink-0" />
+            <span className="text-sm text-white/70 leading-snug">{feature}</span>
+          </div>
         ))}
-      </ul>
+      </div>
 
       <button
-        type="button"
         onClick={onCTA}
-        className={`w-full h-12 rounded-xl font-mono text-[12px] uppercase tracking-wider font-bold transition-all ${
+        className={`w-full py-4 rounded-2xl font-bold text-sm transition-all duration-300 ${
           highlighted
-            ? 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-[0_0_20px_rgba(20,184,166,0.2)] hover:scale-[1.02] active:scale-[0.98]'
-            : 'border border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]'
+            ? 'bg-teal-500 text-black hover:shadow-[0_0_30px_rgba(20,184,166,0.3)] hover:scale-[1.02] active:scale-[0.98]'
+            : 'bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:scale-[1.02] active:scale-[0.98]'
         }`}
       >
         {cta}
@@ -316,6 +311,7 @@ export default function LandingPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [isYearly, setIsYearly] = useState(false);
   const [guestUsed, setGuestUsed] = useState(
     localStorage.getItem(GUEST_USED_KEY) === 'true'
   );
@@ -390,9 +386,14 @@ export default function LandingPage() {
               </span>
             </div>
             <div className="hidden md:flex items-center gap-6">
-              {['Features', 'Use Cases', 'Pricing'].map(link => (
-                <a key={link} href={`#${link.toLowerCase().replace(' ', '-')}`} className="text-[13px] font-medium text-white/50 hover:text-white transition-colors">
-                  {link}
+              {[
+                { name: 'Features', href: '#features' },
+                { name: 'Try Demo', href: '#demo' },
+                { name: 'Pricing', href: '#pricing' },
+                { name: 'Changelog', href: '#changelog' }
+              ].map(link => (
+                <a key={link.name} href={link.href} className="text-[13px] font-medium text-white/50 hover:text-white transition-colors">
+                  {link.name}
                 </a>
               ))}
             </div>
@@ -408,9 +409,9 @@ export default function LandingPage() {
             <button
               type="button"
               onClick={() => setAuthOpen(true)}
-              className="px-4 h-9 rounded-xl font-mono text-[11px] uppercase tracking-wider font-bold transition-all bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-[0_0_15px_rgba(20,184,166,0.15)] hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] hover:scale-[1.02]"
+              className="px-5 h-10 rounded-full font-bold text-[13px] transition-all bg-white text-black hover:bg-white/90 hover:scale-[1.02] flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
             >
-              Get Started Free
+              Launch App <ArrowRight size={16} />
             </button>
           </div>
         </div>
@@ -451,105 +452,76 @@ export default function LandingPage() {
         </section>
 
         {/* ── INTERACTIVE DEMO ──────────────────────── */}
-        <section className="py-16 px-6 w-full max-w-5xl mx-auto relative z-20">
+        <section id="demo" className="py-10 px-6 w-full max-w-6xl mx-auto relative z-20">
           <motion.div 
-            initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }}
+            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
             className="w-full flex flex-col items-center"
           >
-            <h2 className="font-outfit text-4xl md:text-5xl font-bold mb-4 text-center">
+            <h2 className="font-outfit text-4xl md:text-5xl font-extrabold mb-4 leading-[0.9] tracking-tight">
               The Magic in Your <span className="text-teal-400">Hands</span>
             </h2>
-            <p className="text-white/60 text-center max-w-2xl text-[15px] mb-12">
+            <p className="text-lg md:text-xl text-white/60 text-center max-w-3xl mb-10 leading-relaxed font-inter">
               Draw a rough sketch, define your character, and let Picora do the rest. Your creations stay consistent, scene after scene.
             </p>
             
-            <div className="w-full bg-[#0A0A0A] rounded-[24px] border border-white/[0.08] shadow-2xl relative overflow-hidden flex flex-col md:flex-row">
-              
-              {/* Left pane: Canvas & Prompt */}
-              <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-white/[0.08]">
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-teal-400"></div>
-                    <span className="font-mono text-[11px] text-white/70 font-bold tracking-wider">SKETCH CANVAS</span>
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#0A0A0A] p-4 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+              {/* Left pane: Canvas */}
+              <div className="flex flex-col gap-4">
+                {/* Toolbar */}
+                <div className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-white/[0.08] bg-[#111]">
+                  <div className="flex bg-white/5 p-1 rounded-xl">
+                    <button onClick={() => setActiveTool('brush')} className={`p-2 rounded-lg transition-all ${activeTool === 'brush' ? 'bg-white/10 text-white' : 'text-white/40'}`}><Brush size={14} /></button>
+                    <button onClick={() => setActiveTool('eraser')} className={`p-2 rounded-lg transition-all ${activeTool === 'eraser' ? 'bg-white/10 text-white' : 'text-white/40'}`}><Eraser size={14} /></button>
                   </div>
-                  <div className="font-mono text-[10px] text-teal-500/70 bg-teal-500/10 px-2 py-1 rounded border border-teal-500/20">
-                    Seed: #88291
-                  </div>
-                </div>
-
-                {/* Canvas Area */}
-                <div className="relative h-[240px] w-full flex items-center justify-center border-b border-white/[0.08]">
-                  {/* Top left icon */}
-                  <div className="absolute top-4 left-4 w-8 h-8 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.02]">
-                    <Pencil size={14} className="text-teal-400" />
-                  </div>
-                  
-                  {/* Center placeholder */}
-                  <div className="flex flex-col items-center gap-3 opacity-40">
-                    <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center">
-                      <Pencil size={20} className="text-white/60" />
-                    </div>
-                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50 font-bold">NEURAL LINK READY</span>
-                  </div>
-
-                  {/* Bottom right floating toolbar */}
-                  <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-[#111] border border-white/10 rounded-2xl p-1.5 shadow-lg">
-                    <button className="p-2 bg-white/10 rounded-xl text-white"><Pencil size={14} /></button>
-                    <button className="p-2 text-white/40 hover:text-white transition-colors"><Eraser size={14} /></button>
-                    <div className="w-px h-4 bg-white/10 mx-1"></div>
-                    <button className="p-2 text-white/40 hover:text-white transition-colors"><Undo2 size={14} /></button>
+                  <div className="w-px h-6 bg-white/10 mx-2" />
+                  <div className="flex gap-1.5">
+                    {['#000000', '#ef4444', '#3b82f6', '#22c55e'].map(c => (
+                      <button key={c} onClick={() => { setBrushColor(c); setActiveTool('brush'); }} className={`w-6 h-6 rounded-full border-2 transition-all ${brushColor === c && activeTool === 'brush' ? 'border-white scale-110' : 'border-transparent'}`} style={{ background: c }} />
+                    ))}
                   </div>
                 </div>
 
-                {/* Descriptor Prompt */}
-                <div className="p-5 flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-white/50 font-medium">Descriptor Prompt</span>
-                    <span className="text-[11px] text-teal-400 font-medium">AI Enforced</span>
-                  </div>
+                {/* Canvas Container */}
+                <div className="h-[300px] md:h-[400px]">
+                  <MiniCanvas canvasRef={canvasRef} activeTool={activeTool} brushSize={brushSize} brushColor={brushColor} />
+                </div>
+
+                {/* Prompt & Generate */}
+                <div className="flex flex-col gap-2 relative">
+                  <div className="absolute top-2 right-3 font-mono text-[10px] text-teal-500 uppercase tracking-wider bg-teal-500/10 px-2 py-0.5 rounded">Prompt</div>
                   <textarea 
-                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl p-3 text-[13px] text-white/90 resize-none outline-none focus:border-teal-500/50 transition-colors placeholder:text-white/30"
+                    className="w-full bg-[#111] border border-white/10 rounded-2xl p-4 text-[14px] text-white resize-none outline-none focus:border-teal-500/50 transition-colors"
                     rows={2}
-                    defaultValue="A cyberpunk nomad with a glowing mechanical visor and a leather jacket, cinematic lighting"
+                    defaultValue="a young boy with red hair looking up at the stars"
                     readOnly
                   />
                   <button 
                     onClick={handleGenerate} disabled={isGenerating}
-                    className="w-full h-12 mt-2 rounded-xl text-[14px] font-bold transition-all flex items-center justify-center gap-2 bg-[#0ea5e9] hover:bg-[#0284c7] text-white shadow-[0_0_20px_rgba(14,165,233,0.3)] disabled:opacity-50"
-                    style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #10b981 100%)' }}
+                    className="w-full h-12 rounded-xl font-mono text-[12px] uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-600 text-white hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] disabled:opacity-50"
                   >
-                    {isGenerating ? <><Loader2 size={16} className="animate-spin"/> Generating...</> : <><Sparkles size={16} /> Generate Masterpiece</>}
+                    {isGenerating ? <><Loader2 size={16} className="animate-spin"/> Generating...</> : guestUsed ? "Sign up to keep generating" : "Generate with Picora"}
                   </button>
                 </div>
               </div>
 
               {/* Right pane: Output */}
-              <div className="flex-1 bg-[#0A0A0A] flex flex-col items-center justify-center relative min-h-[400px]">
+              <div className="h-full min-h-[400px] bg-[#111] border border-white/10 rounded-2xl flex items-center justify-center relative overflow-hidden">
                 {generatedImage ? (
-                  <img src={generatedImage} alt="Generated Art" className="w-full h-full object-cover" />
+                  <img src={generatedImage} alt="Generated Art" className="w-full h-full object-contain" />
                 ) : (
-                  <div className="flex flex-col items-center text-center px-6">
-                    <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center mb-6 shadow-inner">
-                      <ImageIcon size={28} className="text-white/20" />
-                    </div>
-                    <h3 className="text-white font-semibold text-lg mb-2">Awaiting your creation</h3>
-                    <p className="text-white/40 text-[13px] max-w-[240px] leading-relaxed">
-                      The AI is ready. Start drawing on the left to see the magic happen.
-                    </p>
+                  <div className="flex flex-col items-center gap-4 text-white/30">
+                    <ImageIcon size={32} />
+                    <p className="font-mono text-[12px] uppercase tracking-wider">Your art appears here</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="mt-10 flex items-center gap-4">
+            <div className="mt-8 flex items-center gap-3">
               <div className="flex -space-x-3">
-                <img src="/landing/Layer 1.png" className="w-8 h-8 rounded-full border-2 border-[#050505] object-cover" />
-                <img src="/landing/Layer 2.png" className="w-8 h-8 rounded-full border-2 border-[#050505] object-cover" />
-                <img src="/landing/Layer 3.png" className="w-8 h-8 rounded-full border-2 border-[#050505] object-cover" />
-                <img src="/landing/Seed.png" className="w-8 h-8 rounded-full border-2 border-[#050505] object-cover" />
+                {[1,2,3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-[#050505] bg-teal-900" />)}
               </div>
-              <p className="font-mono text-[11px] text-white/40">Join users like you.</p>
+              <p className="font-mono text-[11px] text-white/40 uppercase tracking-wider">Joined by 10,000+ creators</p>
             </div>
           </motion.div>
         </section>
@@ -572,12 +544,10 @@ export default function LandingPage() {
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-500/10 border border-teal-500/20 rounded-full font-mono text-[10px] text-teal-400 uppercase tracking-widest mb-6">
                 CONSISTENCY IS CORE
               </div>
-              <h2 className="font-outfit text-5xl md:text-6xl font-bold mb-4 leading-tight">
-                Keep the same character.
+              <h2 className="font-outfit text-5xl md:text-6xl font-extrabold mb-6 leading-[0.85] tracking-tight">
+                Keep the same <br /> character. <br />
+                <span className="text-white/40">Every single time.</span>
               </h2>
-              <h3 className="font-outfit text-5xl md:text-6xl font-bold mb-6 leading-tight text-white/40">
-                Every single time.
-              </h3>
               <p className="text-white/50 text-base leading-relaxed max-w-md">
                 While basic AI art tools generate random beautiful images, Picora is built for storytellers. Our Seed-Sync™ technology matches facial features and silhouettes across generations.
               </p>
@@ -763,17 +733,32 @@ export default function LandingPage() {
         {/* ── BUILD IN PUBLIC ─────────────────────────── */}
 
         <section className="py-12 px-6 w-full max-w-4xl mx-auto">
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#111] to-[#0A0A0A] p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[100px] rounded-full pointer-events-none" />
-            <div className="relative z-10">
-              <h2 className="font-outfit text-3xl font-bold mb-2">Build in Public.</h2>
-              <p className="text-white/40">Join our community to shape the future of AI artistry.</p>
+          <div className="rounded-[32px] border border-white/5 bg-gradient-to-br from-[#0f0f11] to-[#050505] p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/5 blur-[100px] rounded-full pointer-events-none" />
+            
+            <div className="relative z-10 flex-1">
+              <h2 className="font-outfit text-3xl md:text-4xl font-extrabold mb-4 leading-[0.9] tracking-tight">Build in Public.</h2>
+              <p className="text-[#888888] text-[15px] max-w-[480px] leading-relaxed mb-6">
+                Picora is evolving every day. We're transparent about our progress and dedicated to building the ultimate tool for storytellers.
+              </p>
+              
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-500 text-[10px] font-bold uppercase tracking-wider">New</span>
+                  <span className="text-[14px] text-white/70">Seed strength control for granular consistency.</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[10px] font-bold uppercase tracking-wider">Soon</span>
+                  <span className="text-[14px] text-white/70">Video generation: Animate your sketches and characters.</span>
+                </div>
+              </div>
             </div>
-            <div className="flex gap-4 relative z-10">
-              <button className="flex items-center gap-2 px-5 h-12 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors font-medium">
+
+            <div className="flex flex-col sm:flex-row gap-3 relative z-10 w-full md:w-auto">
+              <button className="flex items-center justify-center gap-2 px-6 h-12 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all font-bold text-sm">
                 <Github size={18} /> GitHub
               </button>
-              <button className="flex items-center gap-2 px-5 h-12 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors font-medium">
+              <button className="flex items-center justify-center gap-2 px-6 h-12 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all font-bold text-sm">
                 <Twitter size={18} /> Twitter
               </button>
             </div>
@@ -785,70 +770,160 @@ export default function LandingPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
           
           <div className="text-center mb-16 relative z-10">
-            <h2 className="font-outfit text-4xl md:text-5xl font-bold mb-4">
+            <h2 className="font-outfit text-4xl md:text-5xl font-extrabold mb-8 leading-[0.9] tracking-tight">
               Simple, outcome-focused <span className="text-teal-400">pricing.</span>
             </h2>
-            <p className="text-white/40 text-lg">Start free. Upgrade when you need more power.</p>
+            
+            {/* Toggle */}
+            <div className="flex items-center justify-center gap-4">
+              <span className={`text-sm font-medium transition-colors ${!isYearly ? 'text-white' : 'text-white/40'}`}>Monthly</span>
+              <button 
+                onClick={() => setIsYearly(!isYearly)}
+                className="w-12 h-6 rounded-full bg-white/10 relative p-1 transition-colors hover:bg-white/20"
+              >
+                <div className={`w-4 h-4 rounded-full bg-teal-500 transition-all duration-300 ${isYearly ? 'translate-x-6' : 'translate-x-0'}`} />
+              </button>
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-medium transition-colors ${isYearly ? 'text-white' : 'text-white/40'}`}>Yearly</span>
+                <span className="bg-teal-500/10 text-teal-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-teal-500/20">
+                  -20%
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10 pt-4">
             <PricingCard
               name="Free"
               price="$0"
-              description="For exploring"
-              features={['10 generations per month', '3 character seed slots', 'Standard export']}
-              cta="Get Started"
+              yearlyPrice="$0"
+              isYearly={isYearly}
+              description="Perfect for exploring the magic of sketching."
+              features={[
+                '5 high-quality generations/mo',
+                'Basic Character Lock',
+                'Standard style library',
+                'Personal use only'
+              ]}
+              cta="Try it out →"
               onCTA={() => setAuthOpen(true)}
             />
             <PricingCard
               name="Starter"
               price="$19"
-              description="For regular creators"
-              features={['80 generations per month', 'Unlimited refinements', '5 character seed slots', 'No watermark', 'HD export']}
+              yearlyPrice="$15"
+              isYearly={isYearly}
+              description="For creators building their first consistent world."
+              features={[
+                '100 high-quality generations/mo',
+                'Advanced Character Lock',
+                'Full style system',
+                'Commercial license (up to 5k)',
+                'Priority queue'
+              ]}
               highlighted
-              cta="Go Pro"
+              cta="Go Pro →"
               onCTA={() => setAuthOpen(true)}
             />
             <PricingCard
               name="Creator"
               price="$49"
-              description="For power users"
-              features={['250 generations per month', 'Unlimited refinements', '25 character seed slots', 'Commercial license', 'Priority speed']}
-              cta="Contact Sales"
+              yearlyPrice="$39"
+              isYearly={isYearly}
+              description="The ultimate tool for studio-grade production."
+              features={[
+                'Unlimited generations',
+                'Multi-Character Scene Sync',
+                'Early access: Sketch-to-Video',
+                'Commercial license (Unlimited)',
+                'dedicated support'
+              ]}
+              cta="Unleash Power →"
               onCTA={() => setAuthOpen(true)}
             />
+          </div>
+        </section>
+        {/* ── CHANGELOG ───────────────────────────────── */}
+        <section id="changelog" className="py-24 px-6 w-full max-w-6xl mx-auto relative overflow-hidden">
+          <div className="text-center mb-16 relative z-10">
+            <h2 className="font-outfit text-4xl md:text-5xl font-extrabold mb-4 leading-[0.9] tracking-tight">
+              The road to <span className="text-teal-400">excellence.</span>
+            </h2>
+            <p className="text-white/40 text-lg">See our latest updates and what's coming next.</p>
+          </div>
+
+          <div className="max-w-3xl mx-auto flex flex-col gap-8 relative z-10">
+            {[
+              { date: 'Oct 24, 2026', title: 'v1.2.0 - Seed-Sync™ 2.0', desc: 'Improved facial consistency and added high-resolution upscaling for all generations.' },
+              { date: 'Oct 12, 2026', title: 'v1.1.5 - Multi-Character Scene Sync', desc: 'Maintain multiple identities within a single prompt for complex storyboarding.' },
+              { date: 'Sep 28, 2026', title: 'v1.1.0 - Advanced Style System', desc: 'New style blending engine allowing for more unique and varied outputs.' }
+            ].map((update, i) => (
+              <div key={i} className="flex gap-6 items-start">
+                <div className="pt-1.5 flex flex-col items-center">
+                  <div className="w-2.5 h-2.5 rounded-full bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.5)]" />
+                  {i !== 2 && <div className="w-px h-full bg-white/5 my-2" />}
+                </div>
+                <div className="flex flex-col gap-1 pb-8 border-b border-white/5 w-full">
+                  <span className="font-mono text-[11px] text-teal-400 uppercase tracking-widest">{update.date}</span>
+                  <h4 className="font-outfit text-xl font-bold text-white">{update.title}</h4>
+                  <p className="text-white/40 text-[14px] leading-relaxed">{update.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       </main>
 
       {/* ── FOOTER ──────────────────────────────────── */}
-      <footer className="border-t border-white/[0.04] bg-[#050505] py-12 px-6 relative z-10">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-          <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-1.5 mb-4">
-              <span className="font-outfit text-xl font-bold tracking-tight text-white">Picora</span>
+      <footer className="border-t border-white/[0.04] bg-[#050505] py-16 px-6 relative z-10">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
+          {/* Brand Column */}
+          <div className="md:col-span-6 flex flex-col gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-teal-500 flex items-center justify-center">
+                <div className="w-4 h-4 border-[2.5px] border-white rounded-sm transform rotate-45" />
+              </div>
+              <span className="font-outfit text-[22px] font-bold tracking-tight text-white">Picora</span>
             </div>
-            <p className="text-white/30 text-sm max-w-xs">
-              AI-powered art generation with perfect identity retention across any style.
+            <p className="text-[#888888] text-[15px] max-w-[340px] leading-[1.6]">
+              Empowering the next generation of storytellers through AI-driven consistency.
             </p>
+            <div className="flex items-center gap-3 mt-2">
+              <a href="#" className="w-10 h-10 rounded-full border border-white/[0.08] flex items-center justify-center text-white/50 hover:bg-white/5 hover:border-white/20 hover:text-white transition-all"><Twitter size={16} strokeWidth={1.5} /></a>
+              <a href="#" className="w-10 h-10 rounded-full border border-white/[0.08] flex items-center justify-center text-white/50 hover:bg-white/5 hover:border-white/20 hover:text-white transition-all"><Github size={16} strokeWidth={1.5} /></a>
+              <a href="#" className="w-10 h-10 rounded-full border border-white/[0.08] flex items-center justify-center text-white/50 hover:bg-white/5 hover:border-white/20 hover:text-white transition-all"><Instagram size={16} strokeWidth={1.5} /></a>
+            </div>
           </div>
-          <div className="flex flex-col gap-3">
-            <h4 className="font-mono text-[11px] text-white/50 uppercase tracking-wider mb-2">Product</h4>
-            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">Features</a>
-            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">Use Cases</a>
-            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">Pricing</a>
+          
+          {/* Product Column */}
+          <div className="md:col-span-3 flex flex-col gap-4">
+            <h4 className="font-outfit text-[11px] font-extrabold text-white/40 uppercase tracking-[0.15em] mb-2">Product</h4>
+            <a href="#" className="text-[14px] text-[#888888] hover:text-teal-400 transition-colors">Character Lock</a>
+            <a href="#" className="text-[14px] text-[#888888] hover:text-teal-400 transition-colors">Style System</a>
+            <a href="#" className="text-[14px] text-[#888888] hover:text-teal-400 transition-colors">Scene Sync</a>
+            <a href="#" className="text-[14px] text-[#888888] hover:text-teal-400 transition-colors flex items-center gap-1.5">API <ArrowUpRight size={14} className="text-teal-500" /></a>
           </div>
-          <div className="flex flex-col gap-3">
-            <h4 className="font-mono text-[11px] text-white/50 uppercase tracking-wider mb-2">Company</h4>
-            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">Twitter</a>
-            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">Discord</a>
-            <a href="#" className="text-[13px] text-white/40 hover:text-teal-400 transition-colors">GitHub</a>
+          
+          {/* Company Column */}
+          <div className="md:col-span-3 flex flex-col gap-4">
+            <h4 className="font-outfit text-[11px] font-extrabold text-white/40 uppercase tracking-[0.15em] mb-2">Company</h4>
+            <a href="#" className="text-[14px] text-[#888888] hover:text-teal-400 transition-colors">About Us</a>
+            <a href="#" className="text-[14px] text-[#888888] hover:text-teal-400 transition-colors">Privacy Policy</a>
+            <a href="#" className="text-[14px] text-[#888888] hover:text-teal-400 transition-colors">Terms of Service</a>
+            <a href="#" className="text-[14px] text-[#888888] hover:text-teal-400 transition-colors">Contact</a>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="font-mono text-[11px] text-white/20 uppercase tracking-wider">
-            © 2026 Picora.art
+        
+        {/* Bottom Bar */}
+        <div className="max-w-6xl mx-auto pt-8 border-t border-white/[0.04] flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-[12px] text-[#555555]">
+            © 2026 Picora AI Inc. All rights reserved.
           </p>
+          <div className="flex items-center gap-6 text-[12px] text-[#555555]">
+            <a href="#" className="hover:text-white transition-colors">Security</a>
+            <a href="#" className="hover:text-white transition-colors">Status</a>
+            <a href="#" className="hover:text-white transition-colors">Cookies</a>
+          </div>
         </div>
       </footer>
 

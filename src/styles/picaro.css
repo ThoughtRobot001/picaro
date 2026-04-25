@@ -34,6 +34,7 @@
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -44,6 +45,7 @@
   0% {
     transform: translateX(-40%);
   }
+
   100% {
     transform: translateX(140%);
   }
@@ -54,6 +56,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -159,12 +162,10 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    110deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.09) 50%,
-    transparent 60%
-  );
+  background: linear-gradient(110deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.09) 50%,
+      transparent 60%);
   animation: picaro-shimmer 1.25s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
@@ -208,6 +209,7 @@
 .picaro-vslider--dragging {
   filter: brightness(1.0);
 }
+
 .picaro-vslider--dragging::after {
   content: "";
   position: absolute;
@@ -241,13 +243,11 @@
 
 /* Size slider fill: luminous white → grey gradient */
 .picaro-vslider__fill--size {
-  background: linear-gradient(
-    to top,
-    #3a3a3a 0%,
-    #7a7a7a 40%,
-    #c8c8c8 80%,
-    #ffffff 100%
-  );
+  background: linear-gradient(to top,
+      #3a3a3a 0%,
+      #7a7a7a 40%,
+      #c8c8c8 80%,
+      #ffffff 100%);
   box-shadow: 0 -2px 8px rgba(255, 255, 255, 0.18);
 }
 
@@ -265,10 +265,8 @@
   border-radius: 999px;
   pointer-events: none;
   background-image:
-    repeating-conic-gradient(
-      rgba(255, 255, 255, 0.06) 0% 25%,
-      transparent 0% 50%
-    );
+    repeating-conic-gradient(rgba(255, 255, 255, 0.06) 0% 25%,
+      transparent 0% 50%);
   background-size: 6px 6px;
 }
 
@@ -560,16 +558,20 @@
   width: 4px;
   height: 4px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
