@@ -395,10 +395,10 @@ export default function PicaroApp() {
   const currentPage = pages.find((p) => p.id === currentPageId);
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-[#050505] relative z-0">
-      {/* Immersive glow */}
-      <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[1000px] h-[400px] bg-teal-500/10 blur-[120px] rounded-[100%] pointer-events-none -z-10" />
-
+    <div 
+      className="flex h-screen w-full flex-col overflow-hidden bg-[#050505] relative z-0"
+      style={{ boxShadow: 'inset 0 0 120px 0 rgba(0, 210, 255, 0.1)' }}
+    >
       <TopBar
         projectTitle={currentProjectTitle}
         projects={projects}
