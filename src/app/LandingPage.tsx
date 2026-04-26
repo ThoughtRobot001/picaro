@@ -196,7 +196,7 @@ function ComparisonSlider() {
   return (
     <div
       ref={containerRef}
-      className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-3xl overflow-hidden cursor-ew-resize select-none border border-white/10 bg-[#0A0A0A]"
+      className="relative w-full max-w-3xl mx-auto aspect-[6/4] rounded-3xl overflow-hidden cursor-ew-resize select-none border border-white/10 bg-[#0A0A0A]"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -210,7 +210,7 @@ function ComparisonSlider() {
         className="absolute inset-0 w-full h-full"
         style={{ clipPath: `inset(0 0 0 ${sliderPos}%)` }}
       >
-        <img src="/landing/Finished Art.png" alt="Finished Art" className="absolute inset-0 w-full h-full object-contain bg-white" draggable={false} />
+        <img src="/landing/Finished Art.png" alt="Finished Art" className="absolute inset-0 w-full h-full object-contain bg-gradient-to-r from-[#FBFAF9] to-white" draggable={false} />
       </div>
 
       {/* Handle */}
@@ -553,19 +553,19 @@ export default function LandingPage() {
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-100px" }} className="relative">
               <div className="grid grid-cols-2 gap-3 p-4 bg-[#0A0A0A] rounded-3xl border border-white/10">
                 <div className="relative">
-                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">SEED</span>
+                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-teal-400 bg-black/60 px-2 py-0.5 rounded">SEED</span>
                   <img src="/landing/Seed.png" alt="Character Seed" className="rounded-2xl w-full object-cover aspect-square" />
                 </div>
                 <div className="relative">
-                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">FRAME 1</span>
+                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-teal-400 bg-black/60 px-2 py-0.5 rounded">FRAME 1</span>
                   <img src="/landing/Consistent character 1.png" alt="Frame 1" className="rounded-2xl w-full object-cover aspect-square" />
                 </div>
                 <div className="relative">
-                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">FRAME 2</span>
+                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-teal-400 bg-black/60 px-2 py-0.5 rounded">FRAME 2</span>
                   <img src="/landing/Consistent character 2.png" alt="Frame 2" className="rounded-2xl w-full object-cover aspect-square" />
                 </div>
                 <div className="relative">
-                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-white/40 bg-black/60 px-2 py-0.5 rounded">FRAME 3</span>
+                  <span className="absolute top-2 left-2 z-10 font-mono text-[9px] uppercase tracking-wider text-teal-400 bg-black/60 px-2 py-0.5 rounded">FRAME 3</span>
                   <img src="/landing/Consistent character 3.png" alt="Frame 3" className="rounded-2xl w-full object-cover aspect-square" />
                 </div>
               </div>
