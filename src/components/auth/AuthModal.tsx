@@ -21,6 +21,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // ── FIX 5: Forgot Password ────────────────────────────
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Enter your email above first');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Enter a valid email address first');
+      return;
+    }
+    try {
+      const { error } = await supabase.auth
+        .resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+      if (error) throw error;
+      setSuccess(
+        `Password reset link sent to ${email}`
+      );
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset email');
+    }
+  };
 
   // ── FIX 1: Google Sign In ─────────────────────────────
   const handleGoogleSignIn = async () => {
@@ -46,14 +72,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setError('Password must be at least 8 characters');
         return false;
       }
-      if (!/[A-Z]/.test(password)) {
-        setError('Password must contain at least one uppercase letter');
-        return false;
-      }
-      if (!/[0-9]/.test(password)) {
-        setError('Password must contain at least one number');
-        return false;
-      }
     }
     return true;
   };
@@ -71,8 +89,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
+        
+        // Supabase returns identities: [] for duplicate emails
+        if (
+          data?.user && 
+          data.user.identities && 
+          data.user.identities.length === 0
+        ) {
+          setError(
+            'An account with this email already exists. ' +
+            'Sign in instead or reset your password.'
+          );
+          return;
+        }
+
         // ── FIX 5: use email as trigger for confirmation screen
         setSuccess(email);
       } else {
@@ -85,17 +117,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       // ── FIX 3: Friendly error messages ─────────────────
       const message = err.message || '';
       if (message.includes('Invalid login credentials')) {
-        setError('Incorrect email or password');
+        setError('Incorrect email or password. Try again.');
       } else if (message.includes('Email not confirmed')) {
-        setError('Please confirm your email first. Check your inbox.');
+        setError(
+          'Please confirm your email first. ' +
+          'Check your inbox for the confirmation link.'
+        );
       } else if (message.includes('User already registered')) {
-        setError('An account with this email already exists. Sign in instead.');
+        setError(
+          'This email is already registered. Sign in instead.'
+        );
       } else if (message.includes('Password should be')) {
-        setError('Password is too weak. Use at least 8 characters.');
-      } else if (message.includes('rate limit')) {
-        setError('Too many attempts. Please wait a minute and try again.');
+        setError('Password must be at least 8 characters.');
+      } else if (
+        message.includes('rate limit') || 
+        message.includes('too many requests')
+      ) {
+        setError(
+          'Too many attempts. Please wait a minute and try again.'
+        );
+      } else if (message.includes('network') || 
+        message.includes('fetch')) {
+        setError(
+          'Connection error. Check your internet and try again.'
+        );
+      } else if (message.includes('invalid')) {
+        setError('Please enter a valid email address.');
       } else {
-        setError(err.message || 'Something went wrong. Please try again.');
+        setError(
+          err.message || 'Something went wrong. Please try again.'
+        );
       }
     } finally {
       setLoading(false);
@@ -196,33 +247,55 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20"
           />
           <input
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => { setPassword(e.target.value); setError(null); }}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
             placeholder="••••••••"
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-3 py-2.5 text-[13px] text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors font-mono"
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-10 py-2.5 text-[13px] text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors font-mono"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors"
+          >
+            {showPassword ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            )}
+          </button>
         </div>
+        {mode === 'login' && (
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            className="text-right font-mono text-[10px] uppercase tracking-wider text-white/20 hover:text-white/40 transition-colors self-end"
+          >
+            Forgot password?
+          </button>
+        )}
       </div>
 
       {/* ── FIX 4: Password Strength Indicator ────────── */}
       {mode === 'signup' && password.length > 0 && (
         <div className="flex flex-col gap-1.5">
           <div className="flex gap-1">
-            {[
-              password.length >= 8,
-              /[A-Z]/.test(password),
-              /[0-9]/.test(password),
-              /[^A-Za-z0-9]/.test(password),
-            ].map((met, i) => (
+            {[4, 6, 8, 12].map((threshold, i) => (
               <div
                 key={i}
                 className="flex-1 h-1 rounded-full transition-all duration-300"
                 style={{
-                  background: met
-                    ? i < 2 ? '#f59e0b'
-                      : i < 3 ? '#12b76a'
+                  background: password.length >= threshold
+                    ? i === 0 ? '#ef4444'
+                      : i === 1 ? '#f59e0b'
+                      : i === 2 ? '#12b76a'
                       : '#0ea5e9'
                     : 'rgba(255,255,255,0.08)',
                 }}
@@ -230,12 +303,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             ))}
           </div>
           <span className="font-mono text-[10px] text-white/30">
-            {password.length < 8
+            {password.length < 4
               ? 'Too short'
-              : !/[A-Z]/.test(password)
-              ? 'Add uppercase letter'
-              : !/[0-9]/.test(password)
-              ? 'Add a number'
+              : password.length < 6
+              ? 'Weak'
+              : password.length < 8
+              ? 'Almost there — need 8+ characters'
+              : password.length < 12
+              ? 'Good password ✓'
               : 'Strong password ✓'}
           </span>
         </div>
