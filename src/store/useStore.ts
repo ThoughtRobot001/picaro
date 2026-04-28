@@ -41,6 +41,10 @@ interface StoreState {
   activeCharacterSeedId: string | null;
   maxSeeds: number;
 
+  isLeftPanelOpen: boolean;
+  isRightPanelOpen: boolean;
+  isBottomPanelOpen: boolean;
+
   addPage: () => void;
   removePage: (id: number) => void;
   switchPage: (id: number) => void;
@@ -70,6 +74,10 @@ interface StoreState {
   setActiveCharacterSeed: (id: string | null) => void;
   renameCharacterSeed: (id: string, name: string) => void;
   resetStore: () => void;
+
+  toggleLeftPanel: () => void;
+  toggleRightPanel: () => void;
+  toggleBottomPanel: () => void;
 }
 
 const createInitialState = () => ({
@@ -103,6 +111,10 @@ const createInitialState = () => ({
   projectSeedIds: [] as string[],
   activeCharacterSeedId: null as string | null,
   maxSeeds: 10,
+
+  isLeftPanelOpen: true,
+  isRightPanelOpen: true,
+  isBottomPanelOpen: true,
 });
 
 export const useStore = create<StoreState>()(
@@ -227,6 +239,10 @@ export const useStore = create<StoreState>()(
         })),
 
       resetStore: () => set(createInitialState()),
+
+      toggleLeftPanel: () => set((state) => ({ isLeftPanelOpen: !state.isLeftPanelOpen })),
+      toggleRightPanel: () => set((state) => ({ isRightPanelOpen: !state.isRightPanelOpen })),
+      toggleBottomPanel: () => set((state) => ({ isBottomPanelOpen: !state.isBottomPanelOpen })),
     }),
     {
       name: 'picaro-store',
@@ -237,6 +253,9 @@ export const useStore = create<StoreState>()(
         brushSize: state.brushSize,
         brushOpacity: state.brushOpacity,
         activeCharacterSeedId: state.activeCharacterSeedId,
+        isLeftPanelOpen: state.isLeftPanelOpen,
+        isRightPanelOpen: state.isRightPanelOpen,
+        isBottomPanelOpen: state.isBottomPanelOpen,
       }),
     }
   )

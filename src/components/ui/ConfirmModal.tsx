@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -27,11 +28,17 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     setMounted(true);
   }, []);
 
-  if (!isOpen || !mounted) return null;
+  if (!mounted) return null;
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[400] flex items-center justify-center"
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[400] flex items-center justify-center"
       style={{
         background: 'rgba(0,0,0,0.8)',
         backdropFilter: 'blur(12px)',
@@ -40,7 +47,11 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 16, scale: 0.95 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         className="relative flex flex-col rounded-2xl border border-white/[0.08] shadow-2xl w-full max-w-sm mx-4"
         style={{ background: '#0a0a0c' }}
       >
@@ -84,8 +95,10 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             {confirmText}
           </button>
         </div>
-      </div>
-    </div>,
+      </motion.div>
+    </motion.div>
+    )}
+    </AnimatePresence>,
     document.body
   );
 };

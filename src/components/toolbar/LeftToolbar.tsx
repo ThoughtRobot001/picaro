@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   Brush,
   Eraser,
@@ -82,18 +83,21 @@ export const LeftToolbar: React.FC = () => {
   ) => {
     const active = activeTool === id;
     return (
-      <button
+      <motion.button
         key={id}
         type="button"
         title={title}
         aria-pressed={active}
         onClick={() => setActiveTool(id)}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.88 }}
+        transition={{ type: 'spring', damping: 20, stiffness: 300 }}
         className={`picaro-tool-hit picaro-focus shrink-0 border-0 cursor-pointer ${
           active ? 'picaro-tool-hit--active' : 'picaro-tool-hit--inactive'
         }`}
       >
         {node}
-      </button>
+      </motion.button>
     );
   };
 
@@ -127,7 +131,7 @@ export const LeftToolbar: React.FC = () => {
 
         {/* Shape tool with sub-picker */}
         <div className="relative">
-          <button
+          <motion.button
             type="button"
             title="Shapes"
             aria-pressed={activeTool === 'shape'}
@@ -140,6 +144,9 @@ export const LeftToolbar: React.FC = () => {
               }
             }}
             onContextMenu={(e) => { e.preventDefault(); setShapePickerOpen((o) => !o); }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.88 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
             className={`picaro-tool-hit picaro-focus shrink-0 border-0 cursor-pointer relative ${
               activeTool === 'shape' ? 'picaro-tool-hit--active' : 'picaro-tool-hit--inactive'
             }`}
@@ -147,10 +154,19 @@ export const LeftToolbar: React.FC = () => {
             {shapeIcon}
             {/* tiny indicator dot */}
             <span className="absolute bottom-[5px] right-[5px] w-1 h-1 rounded-full bg-white/30" />
-          </button>
-          {shapePickerOpen && (
-            <ShapeSubPicker onClose={() => setShapePickerOpen(false)} />
-          )}
+          </motion.button>
+          <AnimatePresence>
+            {shapePickerOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 16 }}
+                transition={{ ease: 'easeOut', duration: 0.2 }}
+              >
+                <ShapeSubPicker onClose={() => setShapePickerOpen(false)} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

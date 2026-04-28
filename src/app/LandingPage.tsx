@@ -5,7 +5,27 @@ import {
 } from 'lucide-react';
 import { AuthModal } from '../components/auth/AuthModal';
 import { useAuth } from '../lib/useAuth';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+
+// ─── ANIMATION VARIANTS ───────────────────────────────
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: 'easeOut' },
+});
+
+const fadeUpView = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-80px' },
+  transition: { duration: 0.55, ease: 'easeOut' },
+};
+
+const btnMotion = {
+  whileHover: { scale: 1.02 },
+  whileTap: { scale: 0.95 },
+  transition: { type: 'spring', damping: 20, stiffness: 300 },
+};
 
 // ─── GUEST TOKEN ──────────────────────────────────────
 function getGuestToken(): string {
@@ -285,15 +305,18 @@ function PricingCard({
         ))}
       </div>
 
-      <button
+      <motion.button
         onClick={onCTA}
-        className={`w-full py-4 rounded-2xl font-bold text-sm transition-all duration-300 ${highlighted
-          ? 'bg-teal-500 text-black hover:shadow-[0_0_30px_rgba(20,184,166,0.3)] hover:scale-[1.02] active:scale-[0.98]'
-          : 'bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:scale-[1.02] active:scale-[0.98]'
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.96 }}
+        transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+        className={`w-full py-4 rounded-2xl font-bold text-sm ${highlighted
+          ? 'bg-teal-500 text-black shadow-[0_0_20px_rgba(20,184,166,0.2)]'
+          : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
           }`}
       >
         {cta}
-      </button>
+      </motion.button>
     </div>
   );
 }
@@ -375,7 +398,12 @@ export default function LandingPage() {
       <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none z-0" />
 
       {/* ── NAV ─────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 border-b border-white/[0.04] bg-[#050505]/70 backdrop-blur-xl">
+      <motion.nav
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="fixed top-0 left-0 right-0 z-50 px-6 py-4 border-b border-white/[0.04] bg-[#050505]/70 backdrop-blur-xl"
+      >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-1.5 cursor-pointer">
@@ -397,62 +425,79 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button
+            <motion.button
               type="button"
               onClick={() => setAuthOpen(true)}
+              {...btnMotion}
               className="text-[13px] font-medium text-white/60 hover:text-white transition-colors"
             >
               Log in
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               onClick={() => setAuthOpen(true)}
-              className="px-5 h-10 rounded-full font-bold text-[13px] transition-all bg-white text-black hover:bg-white/90 hover:scale-[1.02] flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+              {...btnMotion}
+              className="px-5 h-10 rounded-full font-bold text-[13px] bg-white text-black flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
             >
               Launch App <ArrowRight size={16} />
-            </button>
+            </motion.button>
           </div>
         </div>
-      </nav>
+      </motion.nav>
 
       <main className="relative z-10 flex flex-col items-center w-full">
 
         {/* ── HERO ────────────────────────────────────── */}
         <section className="pt-40 pb-20 px-6 w-full max-w-7xl mx-auto text-center flex flex-col items-center relative">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-            className="flex flex-col items-center"
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-500/20 bg-teal-500/10 mb-8">
-              <Sparkles size={12} className="text-teal-400" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-teal-400 font-medium">
-                AI-Powered Sketch To Art
-              </span>
-            </div>
-            <h1 className="font-outfit text-6xl md:text-8xl font-bold tracking-tight mb-6 leading-[1.05]">
-              Keep the same identity.<br />
-              <span className="bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">
-                Across every scene.
-              </span>
-            </h1>
-            <p className="text-white/40 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10 font-medium">
-              Draw anything. Choose a style. Watch AI transform your sketch into professional artwork in seconds. No art skills required.
-            </p>
-            <div className="flex items-center gap-4">
-              <button onClick={() => setAuthOpen(true)} className="px-8 h-14 rounded-2xl font-outfit text-[16px] font-bold transition-all bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)] hover:shadow-[0_0_40px_rgba(20,184,166,0.4)] hover:scale-[1.02]">
-                Try Picora for Free
-              </button>
-              <button className="px-8 h-14 rounded-2xl font-outfit text-[16px] font-bold transition-all border border-white/10 bg-white/[0.02] text-white hover:bg-white/[0.06]">
-                See Pricing
-              </button>
-            </div>
+          {/* Badge */}
+          <motion.div {...fadeUp(0)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-500/20 bg-teal-500/10 mb-8">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-400" />
+            </span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-teal-400 font-medium">
+              AI-Powered Sketch To Art
+            </span>
+          </motion.div>
+
+          {/* Headline */}
+          <motion.h1 {...fadeUp(0.1)} className="font-outfit text-6xl md:text-8xl font-bold tracking-tight mb-6 leading-[1.05]">
+            Keep the same identity.<br />
+            <span className="bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">
+              Across every scene.
+            </span>
+          </motion.h1>
+
+          {/* Paragraph */}
+          <motion.p {...fadeUp(0.2)} className="text-white/40 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10 font-medium">
+            Draw anything. Choose a style. Watch AI transform your sketch into professional artwork in seconds. No art skills required.
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div {...fadeUp(0.3)} className="flex items-center gap-4">
+            <motion.button
+              onClick={() => setAuthOpen(true)}
+              {...btnMotion}
+              className="px-8 h-14 rounded-2xl font-outfit text-[16px] font-bold bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]"
+            >
+              Try Picora for Free
+            </motion.button>
+            <motion.button
+              {...btnMotion}
+              className="px-8 h-14 rounded-2xl font-outfit text-[16px] font-bold border border-white/10 bg-white/[0.02] text-white"
+            >
+              See Pricing
+            </motion.button>
           </motion.div>
         </section>
 
         {/* ── INTERACTIVE DEMO ──────────────────────── */}
         <section id="demo" className="py-10 px-6 w-full max-w-6xl mx-auto relative z-20">
           <motion.div
-            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
             className="w-full flex flex-col items-center"
           >
             <h2 className="font-outfit text-4xl md:text-5xl font-extrabold mb-4 leading-[0.9] tracking-tight">
@@ -526,13 +571,15 @@ export default function LandingPage() {
 
         {/* ── SLIDER SECTION ──────────────────────────── */}
         <section id="features" className="py-24 px-6 w-full max-w-5xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} className="text-center mb-16">
+          <motion.div {...fadeUpView} className="text-center mb-16">
             <h2 className="font-outfit text-4xl md:text-5xl font-bold mb-4">
               From rough sketch → <span className="text-emerald-400">finished art.</span>
             </h2>
             <p className="text-white/40 text-lg">High-fidelity rendering powered by advanced AI models.</p>
           </motion.div>
-          <ComparisonSlider />
+          <motion.div {...fadeUpView}>
+            <ComparisonSlider />
+          </motion.div>
         </section>
 
         {/* ── CHARACTER LOCK ──────────────────────────── */}

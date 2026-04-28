@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Redo2, Pencil, Plus, Share2, Undo2, ChevronDown, Check, LogOut, User as UserIcon, FolderPlus, Sparkles, X, Trash2, MoreVertical } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Redo2, Pencil, Plus, Share2, Undo2, ChevronDown, Check, LogOut, User as UserIcon, FolderPlus, Sparkles, X, Trash2, MoreVertical, PanelLeft, PanelBottom, PanelRight } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useStore } from '../../store/useStore';
 import { ExportModal } from '../export/ExportModal';
@@ -60,34 +61,45 @@ const UserDropdown: React.FC<{
 
   return (
     <div className="relative mr-2" ref={ref}>
-      <button
+      <motion.button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[13px] font-medium text-white transition-colors hover:bg-white/20"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[13px] font-medium text-white"
       >
         {initial}
-      </button>
+      </motion.button>
 
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0f0f11]/90 backdrop-blur-xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200">
-          <div className="border-b border-white/[0.08] px-4 py-3 bg-white/[0.02]">
-            <p className="truncate text-[11px] font-medium text-white/90">{user.email}</p>
-          </div>
-          <div className="p-1.5">
-            <button
-              onClick={async () => {
-                setIsOpen(false);
-                await signOut();
-                navigate('/login');
-              }}
-              className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-red-400 transition-all hover:bg-red-500/10 active:scale-[0.98]"
-            >
-              <LogOut size={14} />
-              Sign Out
-            </button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0f0f11]/90 backdrop-blur-xl shadow-2xl z-50"
+          >
+            <div className="border-b border-white/[0.08] px-4 py-3 bg-white/[0.02]">
+              <p className="truncate text-[11px] font-medium text-white/90">{user.email}</p>
+            </div>
+            <div className="p-1.5">
+              <button
+                onClick={async () => {
+                  setIsOpen(false);
+                  await signOut();
+                  navigate('/login');
+                }}
+                className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-red-400 transition-all hover:bg-red-500/10 active:scale-[0.98]"
+              >
+                <LogOut size={14} />
+                Sign Out
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -140,8 +152,14 @@ const ProjectDropdown: React.FC<{
         <ChevronDown size={14} className="text-white/40" />
       </button>
 
-      {isOpen && (
-        <div className="absolute top-full mt-2 w-64 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0f0f11]/90 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 animate-in fade-in zoom-in-95 duration-200">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="absolute top-full mt-2 w-64 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0f0f11]/90 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50">
           <div className="p-1.5">
             <button
               onClick={() => {
@@ -230,8 +248,9 @@ const ProjectDropdown: React.FC<{
               New Project
             </button>
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <ConfirmModal
         isOpen={projectToDelete !== null}
@@ -294,7 +313,11 @@ export const TopBar: React.FC<TopBarProps> = ({
   const [authOpen, setAuthOpen] = useState(false);
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
-  const { canUndo, canRedo, triggerUndo, triggerRedo } = useStore();
+  const { 
+    isLeftPanelOpen, isRightPanelOpen, isBottomPanelOpen, 
+    toggleLeftPanel, toggleRightPanel, toggleBottomPanel,
+    canUndo, canRedo, triggerUndo, triggerRedo 
+  } = useStore();
   const { user, signOut } = useAuth();
   const { count, limit } = useUsage();
 
@@ -358,6 +381,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           </button>
         </div>
 
+
+
         <div className="mx-auto flex min-w-[280px] max-w-[min(46vw,460px)] items-center justify-center gap-2">
           {isEditing ? (
             <input
@@ -382,7 +407,35 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
 
         <div className="flex justify-end">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center rounded-[10px] bg-[#1a1a1a] p-[3px] border border-white/[0.05] shadow-inner">
+              <button
+                type="button"
+                title="Toggle Left Panel"
+                onClick={toggleLeftPanel}
+                className={`p-1.5 rounded-[8px] transition-all ${isLeftPanelOpen ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70 hover:bg-white/5'}`}
+              >
+                <PanelLeft size={18} strokeWidth={1.8} />
+              </button>
+              <button
+                type="button"
+                title="Toggle Bottom Panel"
+                onClick={toggleBottomPanel}
+                className={`p-1.5 rounded-[8px] transition-all ${isBottomPanelOpen ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70 hover:bg-white/5'}`}
+              >
+                <PanelBottom size={18} strokeWidth={1.8} />
+              </button>
+              <button
+                type="button"
+                title="Toggle Right Panel"
+                onClick={toggleRightPanel}
+                className={`p-1.5 rounded-[8px] transition-all ${isRightPanelOpen ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70 hover:bg-white/5'}`}
+              >
+                <PanelRight size={18} strokeWidth={1.8} />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
             {user && (
               <div className="flex items-center gap-1.5 rounded-md border border-white/[0.06] bg-white/[0.04] px-2 py-1">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">
@@ -410,6 +463,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               signOut={signOut}
               onOpenAuth={() => setAuthOpen(true)}
             />
+            </div>
           </div>
         </div>
       </div>

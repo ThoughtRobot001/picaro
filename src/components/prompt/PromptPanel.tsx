@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Loader2, Sparkles, X, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useStore } from '../../store/useStore';
 import {
   generateFromSketch,
@@ -307,17 +308,20 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
         <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-white/30 block mb-3">
           Main Command
         </span>
-        <button
+        <motion.button
           type="button"
           disabled={isGenerating}
           onClick={handleGenerate}
-          className="group relative flex h-[44px] w-full items-center justify-center gap-2 rounded-[12px] bg-white text-black transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-100 shadow-[0_4px_14px_rgba(255,255,255,0.12)] hover:shadow-[0_6px_20px_rgba(255,255,255,0.18)]"
+          whileHover={{ scale: isGenerating ? 1 : 1.02 }}
+          whileTap={{ scale: isGenerating ? 1 : 0.95 }}
+          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+          className="group relative flex h-[44px] w-full items-center justify-center gap-2 rounded-[12px] bg-white text-black disabled:cursor-not-allowed disabled:opacity-50 shadow-[0_4px_14px_rgba(255,255,255,0.12)]"
         >
           {isGenerating ? (
-            <>
+            <div className="flex items-center justify-center gap-2 animate-pulse">
               <Loader2 size={14} className="animate-spin text-black/60" />
-              <span className="font-sans text-[13px] font-semibold tracking-tight">Generating...</span>
-            </>
+              <span className="font-sans text-[13px] font-semibold tracking-tight">Neural Synthesis...</span>
+            </div>
           ) : (
             <>
               <Sparkles size={14} className="text-black/60" />
@@ -327,7 +331,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
               </div>
             </>
           )}
-        </button>
+        </motion.button>
 
         {activeSeed && (
           <div className="mt-4 flex items-center gap-3 rounded-[10px] border border-emerald-500/20 bg-emerald-500/10 px-3 py-2">
@@ -387,14 +391,15 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
           />
         </div>
         <div className="mt-auto shrink-0 relative bg-[#0a0a0c]">
-          <div 
-            className={`absolute bottom-[100%] left-0 right-0 bg-[#0a0a0c]/80 backdrop-blur-2xl border-t border-white/[0.08] shadow-[0_-20px_40px_rgba(0,0,0,0.5)] transition-all duration-400 ease-[cubic-bezier(0.23,1,0.32,1)] flex flex-col overflow-hidden z-20`}
-            style={{ 
-              height: isDrawerOpen ? '35vh' : '0px', 
-              opacity: isDrawerOpen ? 1 : 0,
-              visibility: isDrawerOpen ? 'visible' : 'hidden',
-            }}
-          >
+          <AnimatePresence initial={false}>
+            {isDrawerOpen && (
+              <motion.div 
+                className="absolute bottom-[100%] left-0 right-0 bg-[#0a0a0c]/80 backdrop-blur-2xl border-t border-white/[0.08] shadow-[0_-20px_40px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden z-20"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: '35vh', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              >
             <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5 [scrollbar-width:thin]">
               {iterations.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-white/20">
@@ -454,7 +459,9 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
                 ))
               )}
             </div>
-          </div>
+          </motion.div>
+          )}
+          </AnimatePresence>
           <button 
             type="button"
             onClick={() => setIsDrawerOpen(!isDrawerOpen)}
@@ -475,11 +482,19 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
                   {text.length}/2000
                 </span>
               </div>
-              {errorMsg && (
-                <div className="text-[11px] text-red-400 bg-red-400/10 rounded-md px-3 py-2 border border-red-500/20">
-                  {errorMsg}
-                </div>
-              )}
+              <AnimatePresence>
+                {errorMsg && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    className="text-[11px] text-red-400 bg-red-400/10 rounded-md px-3 py-2 border border-red-500/20"
+                  >
+                    {errorMsg}
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <div className="relative">
                 <textarea
                   value={text}

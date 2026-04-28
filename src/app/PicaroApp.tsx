@@ -1,5 +1,6 @@
 import React, { useRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../lib/useAuth';
 import { useStore } from '../store/useStore';
 import { useDatabase } from '../lib/useDatabase';
@@ -57,6 +58,9 @@ export default function PicaroApp() {
     canRedo,
     triggerUndo,
     triggerRedo,
+    isLeftPanelOpen,
+    isRightPanelOpen,
+    isBottomPanelOpen,
   } = useStore();
   const {
     currentProjectId,
@@ -411,7 +415,19 @@ export default function PicaroApp() {
       />
 
       <div className="flex flex-row flex-1 min-h-0 overflow-hidden">
-        <LeftToolbar />
+        <AnimatePresence initial={false}>
+          {isLeftPanelOpen && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 52, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="shrink-0 flex overflow-hidden"
+            >
+              <LeftToolbar />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="flex min-w-0 flex-1 flex-col min-h-0 overflow-hidden">
           {/* Small Canvas Toolbar */}
@@ -428,18 +444,40 @@ export default function PicaroApp() {
             />
           </div>
 
-          <Filmstrip deletePageFromDatabase={deletePageFromDatabase} />
+          <AnimatePresence initial={false}>
+            {isBottomPanelOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="shrink-0 flex flex-col overflow-hidden"
+              >
+                <Filmstrip deletePageFromDatabase={deletePageFromDatabase} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        <div className="shrink-0 flex self-stretch">
-          <PromptPanel
-            getCanvasDataURL={getCanvasDataURL}
-            onGenerated={handleGenerated}
-            selectedStyle={selectedStyle}
-            currentGeneratedImageURL={currentPage?.aiResult ?? generatedImageURL}
-            currentProjectId={currentProjectId}
-          />
-        </div>
+        <AnimatePresence initial={false}>
+          {isRightPanelOpen && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 340, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="shrink-0 flex self-stretch overflow-hidden"
+            >
+              <PromptPanel
+                getCanvasDataURL={getCanvasDataURL}
+                onGenerated={handleGenerated}
+                selectedStyle={selectedStyle}
+                currentGeneratedImageURL={currentPage?.aiResult ?? generatedImageURL}
+                currentProjectId={currentProjectId}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {shortcutsOpen && (

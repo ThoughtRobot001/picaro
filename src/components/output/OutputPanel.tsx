@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { ImageIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useStore } from '../../store/useStore';
 
 interface OutputPanelProps {
@@ -205,8 +206,15 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
             {currentStyleLabel}
             <span className="text-white/40">v</span>
           </button>
+          <AnimatePresence>
           {styleOpen && (
-            <div className="absolute right-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-lg border border-white/10 bg-[#111] shadow-xl">
+            <motion.div 
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              transition={{ ease: 'easeOut', duration: 0.2 }}
+              className="absolute right-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-lg border border-white/10 bg-[#111] shadow-xl"
+            >
               {OUTPUT_STYLES.map((s) => (
                 <button
                   key={s.id}
@@ -224,8 +232,9 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                   {s.label}
                 </button>
               ))}
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
       </div>
 
