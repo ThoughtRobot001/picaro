@@ -6,62 +6,14 @@ import {
   PaintBucket,
   Move,
   Hand,
-  Shapes,
   Square,
   Circle,
   Minus,
   Layers,
   Settings,
-  SlidersHorizontal,
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
-/* ─── Brush Settings Popover ─── */
-const BrushSettingsPopover: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const { brushSize, setBrushSize, brushOpacity, setBrushOpacity } = useStore();
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [onClose]);
-
-  return (
-    <div
-      ref={ref}
-      className="absolute left-[56px] top-0 w-48 z-[200] flex flex-col gap-4 rounded-[12px] border border-white/[0.08] bg-[#0f0f11] p-3 shadow-2xl"
-    >
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold uppercase tracking-wider text-white/50">Size</label>
-        <input
-          type="range"
-          min={1}
-          max={50}
-          value={brushSize}
-          onChange={(e) => setBrushSize(parseInt(e.target.value, 10))}
-          className="w-full accent-teal-500"
-        />
-        <div className="text-[11px] text-white/80 font-mono text-right">{brushSize}px</div>
-      </div>
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold uppercase tracking-wider text-white/50">Opacity</label>
-        <input
-          type="range"
-          min={0.05}
-          max={1}
-          step={0.05}
-          value={brushOpacity}
-          onChange={(e) => setBrushOpacity(parseFloat(e.target.value))}
-          className="w-full accent-teal-500"
-        />
-        <div className="text-[11px] text-white/80 font-mono text-right">{Math.round(brushOpacity * 100)}%</div>
-      </div>
-    </div>
-  );
-};
 
 /* ─── Shape sub-picker popover ─── */
 const ShapeSubPicker: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -122,7 +74,6 @@ export const LeftToolbar: React.FC = () => {
   } = useStore();
 
   const [shapePickerOpen, setShapePickerOpen] = useState(false);
-  const [brushSettingsOpen, setBrushSettingsOpen] = useState(false);
 
   const toolBtn = (
     id: 'brush' | 'eraser' | 'text' | 'paint' | 'move' | 'hand',
@@ -164,30 +115,7 @@ export const LeftToolbar: React.FC = () => {
     >
       {/* ── Tool buttons ── */}
       <div className="flex flex-col items-center gap-1 pt-3 relative">
-        <div className="relative">
-          <button
-            type="button"
-            title="Brush Settings"
-            aria-pressed={activeTool === 'brush'}
-            onClick={() => setActiveTool('brush')}
-            onContextMenu={(e) => { e.preventDefault(); setBrushSettingsOpen((o) => !o); }}
-            className={`picaro-tool-hit picaro-focus shrink-0 border-0 cursor-pointer ${
-              activeTool === 'brush' ? 'picaro-tool-hit--active' : 'picaro-tool-hit--inactive'
-            }`}
-          >
-            <Brush size={18} strokeWidth={2} />
-          </button>
-          <button 
-            type="button"
-            onClick={() => setBrushSettingsOpen((o) => !o)}
-            className="absolute -right-2 -bottom-1 p-0.5 rounded-full bg-[#1c1c1f] text-white/50 hover:text-white transition-colors"
-          >
-            <SlidersHorizontal size={10} />
-          </button>
-          {brushSettingsOpen && (
-            <BrushSettingsPopover onClose={() => setBrushSettingsOpen(false)} />
-          )}
-        </div>
+        {toolBtn('brush', 'Brush', <Brush size={18} strokeWidth={2} />)}
         {toolBtn('eraser', 'Eraser',         <Eraser      size={18} strokeWidth={2} />)}
         {toolBtn('text',   'Text',           <Type        size={18} strokeWidth={2} />)}
         {toolBtn('paint',  'Paint bucket',   <PaintBucket size={18} strokeWidth={2} />)}
