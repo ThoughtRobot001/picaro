@@ -384,30 +384,30 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           <div className="h-4 w-px bg-white/[0.1]"></div>
 
-          <div className="flex items-center gap-1 rounded-[12px] bg-[#0b0b0d]/50 p-1 border border-white/[0.08] shadow-inner">
+          <div className="flex items-center gap-1">
             <button
               type="button"
               title="Toggle Left Panel"
               onClick={toggleLeftPanel}
-              className={`flex h-[30px] w-[34px] items-center justify-center rounded-[8px] transition-all ${isLeftPanelOpen ? 'bg-white/[0.12] text-white shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-white/[0.06]' : 'text-white/40 hover:text-white/90 hover:bg-white/[0.06]'}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${isLeftPanelOpen ? 'text-white' : 'text-white/40 hover:text-white/90'}`}
             >
-              <PanelLeft size={16} strokeWidth={1.8} />
+              <PanelLeft size={18} strokeWidth={1.8} />
             </button>
             <button
               type="button"
               title="Toggle Bottom Panel"
               onClick={toggleBottomPanel}
-              className={`flex h-[30px] w-[34px] items-center justify-center rounded-[8px] transition-all ${isBottomPanelOpen ? 'bg-white/[0.12] text-white shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-white/[0.06]' : 'text-white/40 hover:text-white/90 hover:bg-white/[0.06]'}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${isBottomPanelOpen ? 'text-white' : 'text-white/40 hover:text-white/90'}`}
             >
-              <PanelBottom size={16} strokeWidth={1.8} />
+              <PanelBottom size={18} strokeWidth={1.8} />
             </button>
             <button
               type="button"
               title="Toggle Right Panel"
               onClick={toggleRightPanel}
-              className={`flex h-[30px] w-[34px] items-center justify-center rounded-[8px] transition-all ${isRightPanelOpen ? 'bg-white/[0.12] text-white shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-white/[0.06]' : 'text-white/40 hover:text-white/90 hover:bg-white/[0.06]'}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${isRightPanelOpen ? 'text-white' : 'text-white/40 hover:text-white/90'}`}
             >
-              <PanelRight size={16} strokeWidth={1.8} />
+              <PanelRight size={18} strokeWidth={1.8} />
             </button>
           </div>
         </div>
