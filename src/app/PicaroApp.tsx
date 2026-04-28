@@ -421,7 +421,7 @@ export default function PicaroApp() {
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: 52, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
               className="shrink-0 flex overflow-hidden"
             >
               <LeftToolbar />
@@ -450,7 +450,7 @@ export default function PicaroApp() {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
                 className="shrink-0 flex flex-col overflow-hidden"
               >
                 <Filmstrip deletePageFromDatabase={deletePageFromDatabase} />
@@ -465,7 +465,7 @@ export default function PicaroApp() {
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: 340, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
               className="shrink-0 flex self-stretch overflow-hidden"
             >
               <PromptPanel
