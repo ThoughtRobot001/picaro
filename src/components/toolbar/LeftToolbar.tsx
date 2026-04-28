@@ -111,6 +111,9 @@ export const LeftToolbar: React.FC = () => {
         borderRight: '1px solid rgba(255,255,255,0.07)',
         boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.03)',
         position: 'relative',
+        borderRadius: 0,
+        margin: 0,
+        padding: 0,
       }}
     >
       {/* ── Tool buttons ── */}
