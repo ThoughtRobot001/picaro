@@ -87,10 +87,10 @@ export default function PicaroApp() {
   );
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && ready === 'unauthenticated') {
       navigate('/login');
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, ready]);
 
   useEffect(() => {
     canvasExportRef.current = {};
@@ -399,8 +399,8 @@ export default function PicaroApp() {
 
   const currentPage = pages.find((p) => p.id === currentPageId);
 
-  // Guard: render nothing while auth is resolving or user is not signed in
-  if (!ready) return <LoadingScreen />;
+  // Guard: show loading screen until auth + data are ready
+  if (ready === 'loading') return <LoadingScreen />;
   if (!user) return null;
 
   return (

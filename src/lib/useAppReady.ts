@@ -1,53 +1,36 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from './useAuth';
-import { useStore } from '../store/useStore';
 
-export function useAppReady() {
+type AppReadyState = 'loading' | 'ready' | 'unauthenticated';
+
+export function useAppReady(): AppReadyState {
   const { user, loading: authLoading } = useAuth();
-  const { pages } = useStore();
-  const [dbLoaded, setDbLoaded] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [state, setState] = useState<AppReadyState>('loading');
+  // Track whether we've already committed to a state so we don't re-run
+  const settled = useRef(false);
 
-  // Wait for auth to resolve
   useEffect(() => {
+    // Still waiting for Supabase to check the session
     if (authLoading) return;
 
+    if (settled.current) return;
+
     if (!user) {
-      // Not logged in — no DB to load
-      setReady(true);
+      // Auth resolved — not logged in
+      settled.current = true;
+      setState('unauthenticated');
       return;
     }
 
-    // Auth resolved and user exists
-    // Give DB sync a moment to load pages
-    const timeout = window.setTimeout(() => {
-      setDbLoaded(true);
-    }, 1500); // 1.5s max wait for DB
+    // User is logged in. Show the loading screen for at least 1.2s
+    // so it's visible even on fast connections, then mark ready.
+    const minDisplayTimer = window.setTimeout(() => {
+      settled.current = true;
+      setState('ready');
+    }, 1200);
 
-    return () => window.clearTimeout(timeout);
+    return () => window.clearTimeout(minDisplayTimer);
   }, [authLoading, user]);
 
-  // Also mark ready when pages have loaded
-  // from database (canvasDataURL populated)
-  useEffect(() => {
-    if (!user) return;
-    const hasLoadedPages = pages.some(
-      (p) => p.canvasDataURL !== null || p.aiResult !== null
-    );
-    if (hasLoadedPages) {
-      setDbLoaded(true);
-    }
-  }, [pages, user]);
-
-  useEffect(() => {
-    if (!authLoading && dbLoaded) {
-      // Small delay for smooth transition
-      const t = window.setTimeout(() => {
-        setReady(true);
-      }, 300);
-      return () => window.clearTimeout(t);
-    }
-  }, [authLoading, dbLoaded]);
-
-  return ready;
+  return state;
 }
