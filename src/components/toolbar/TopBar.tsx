@@ -267,7 +267,7 @@ const TopBarActions: React.FC<TopBarActionsProps> = ({
 
       <button
         type="button"
-        className="btn-secondary h-8 text-[12px] px-4"
+        className="picaro-export-btn"
         onClick={onExport}
       >
         Export
@@ -332,8 +332,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   };
 
   return (
-    <div className="relative flex w-full shrink-0 flex-col px-6 pt-5 pb-1 z-50">
-      <div className="picaro-topbar-shell mx-auto grid min-h-[56px] w-full max-w-[1200px] shrink-0 grid-cols-[auto_1fr_auto] items-center gap-4 px-5">
+    <div className="relative flex w-full shrink-0 flex-col">
+      <div className="picaro-topbar-shell grid min-h-[58px] w-full shrink-0 grid-cols-[auto_1fr_auto] items-center gap-4 px-4">
         <div className="flex min-w-0 items-center gap-1">
           <button
             type="button"

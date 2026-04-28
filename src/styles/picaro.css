@@ -470,12 +470,10 @@
 }
 
 .picaro-topbar-shell {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(10, 10, 10, 0.8);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-radius: 32px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent),
+    #0a0a0b;
 }
 
 .picaro-status-pill {
