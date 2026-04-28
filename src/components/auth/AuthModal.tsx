@@ -6,12 +6,14 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  inline?: boolean;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  inline = false,
 }) => {
   const [mode, setMode] = useState<'login' | 'signup'>(
     'login'
@@ -49,7 +51,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         });
         if (error) throw error;
         onSuccess();
-        onClose();
+        if (!inline) onClose();
       }
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
@@ -58,6 +60,124 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
+  /** Shared form content */
+  const formContent = (
+    <div className="flex flex-col gap-3 px-6 py-5">
+      {error && (
+        <div className="text-[11px] text-red-400 bg-red-400/10 rounded-lg px-3 py-2 font-mono">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="text-[11px] text-emerald-400 bg-emerald-400/10 rounded-lg px-3 py-2 font-mono">
+          {success}
+        </div>
+      )}
+
+      {/* Email */}
+      <div className="flex flex-col gap-1.5">
+        <label className="font-mono text-[10px] uppercase tracking-wider text-white/30">
+          Email
+        </label>
+        <div className="relative">
+          <Mail
+            size={13}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20"
+          />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSubmit();
+            }}
+            placeholder="you@example.com"
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-3 py-2.5 text-[13px] text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors font-mono"
+          />
+        </div>
+      </div>
+
+      {/* Password */}
+      <div className="flex flex-col gap-1.5">
+        <label className="font-mono text-[10px] uppercase tracking-wider text-white/30">
+          Password
+        </label>
+        <div className="relative">
+          <Lock
+            size={13}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSubmit();
+            }}
+            placeholder="••••••••"
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-3 py-2.5 text-[13px] text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors font-mono"
+          />
+        </div>
+      </div>
+
+      {/* Submit */}
+      <button
+        type="button"
+        disabled={loading}
+        onClick={handleSubmit}
+        className="flex items-center justify-center gap-2 w-full h-10 rounded-lg font-mono text-[11px] uppercase tracking-wider font-bold transition-all disabled:opacity-50 mt-1"
+        style={{
+          background:
+            'linear-gradient(135deg, #12b76a 0%, #0ea5e9 100%)',
+          color: '#fff',
+          boxShadow:
+            '0 0 18px rgba(18,183,106,0.25)',
+        }}
+      >
+        {loading && (
+          <Loader2 size={13} className="animate-spin" />
+        )}
+        {mode === 'login' ? 'Sign In' : 'Create Account'}
+      </button>
+
+      {/* Toggle mode */}
+      <button
+        type="button"
+        onClick={() => {
+          setMode(mode === 'login' ? 'signup' : 'login');
+          setError(null);
+          setSuccess(null);
+        }}
+        className="font-mono text-[10px] uppercase tracking-wider text-white/25 hover:text-white/50 transition-colors text-center mt-1"
+      >
+        {mode === 'login'
+          ? "Don't have an account? Sign up"
+          : 'Already have an account? Sign in'}
+      </button>
+    </div>
+  );
+
+  /** ── Inline mode: render card content only, no overlay ── */
+  if (inline) {
+    return (
+      <div className="flex flex-col rounded-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.06]">
+          <div>
+            <h2 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/80">
+              {mode === 'login' ? 'Welcome back' : 'Create account'}
+            </h2>
+            <p className="font-mono text-[10px] text-white/30 mt-0.5 uppercase tracking-wider">
+              Picora AI
+            </p>
+          </div>
+        </div>
+        {formContent}
+      </div>
+    );
+  }
+
+  /** ── Modal mode: overlay + card ── */
   if (!isOpen) return null;
 
   return (
@@ -93,101 +213,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <X size={16} />
           </button>
         </div>
-
-        {/* Form */}
-        <div className="flex flex-col gap-3 px-6 py-5">
-          {error && (
-            <div className="text-[11px] text-red-400 bg-red-400/10 rounded-lg px-3 py-2 font-mono">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="text-[11px] text-emerald-400 bg-emerald-400/10 rounded-lg px-3 py-2 font-mono">
-              {success}
-            </div>
-          )}
-
-          {/* Email */}
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-white/30">
-              Email
-            </label>
-            <div className="relative">
-              <Mail
-                size={13}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20"
-              />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSubmit();
-                }}
-                placeholder="you@example.com"
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-3 py-2.5 text-[13px] text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors font-mono"
-              />
-            </div>
-          </div>
-
-          {/* Password */}
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-white/30">
-              Password
-            </label>
-            <div className="relative">
-              <Lock
-                size={13}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20"
-              />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSubmit();
-                }}
-                placeholder="••••••••"
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-3 py-2.5 text-[13px] text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors font-mono"
-              />
-            </div>
-          </div>
-
-          {/* Submit */}
-          <button
-            type="button"
-            disabled={loading}
-            onClick={handleSubmit}
-            className="flex items-center justify-center gap-2 w-full h-10 rounded-lg font-mono text-[11px] uppercase tracking-wider font-bold transition-all disabled:opacity-50 mt-1"
-            style={{
-              background:
-                'linear-gradient(135deg, #12b76a 0%, #0ea5e9 100%)',
-              color: '#fff',
-              boxShadow:
-                '0 0 18px rgba(18,183,106,0.25)',
-            }}
-          >
-            {loading && (
-              <Loader2 size={13} className="animate-spin" />
-            )}
-            {mode === 'login' ? 'Sign In' : 'Create Account'}
-          </button>
-
-          {/* Toggle mode */}
-          <button
-            type="button"
-            onClick={() => {
-              setMode(mode === 'login' ? 'signup' : 'login');
-              setError(null);
-              setSuccess(null);
-            }}
-            className="font-mono text-[10px] uppercase tracking-wider text-white/25 hover:text-white/50 transition-colors text-center mt-1"
-          >
-            {mode === 'login'
-              ? "Don't have an account? Sign up"
-              : 'Already have an account? Sign in'}
-          </button>
-        </div>
+        {formContent}
       </div>
     </div>
   );
