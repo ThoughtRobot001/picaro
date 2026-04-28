@@ -10,8 +10,6 @@ import { PromptPanel } from '../components/prompt/PromptPanel';
 import { TopBar } from '../components/toolbar/TopBar';
 import { LeftToolbar } from '../components/toolbar/LeftToolbar';
 import { Filmstrip } from '../components/filmstrip/Filmstrip';
-import { LoadingScreen } from '../components/ui/LoadingScreen';
-import { useAppReady } from '../lib/useAppReady';
 
 function isEditableTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
@@ -30,7 +28,6 @@ function clamp(value: number, min: number, max: number) {
 export default function PicaroApp() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const ready = useAppReady();
 
   // ── All hooks must be declared before any early return ──────────────────
   const canvasExportRef = useRef<Record<number, string>>({});
@@ -87,10 +84,10 @@ export default function PicaroApp() {
   );
 
   useEffect(() => {
-    if (!loading && !user && ready === 'unauthenticated') {
+    if (!loading && !user) {
       navigate('/login');
     }
-  }, [user, loading, navigate, ready]);
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     canvasExportRef.current = {};
@@ -399,9 +396,8 @@ export default function PicaroApp() {
 
   const currentPage = pages.find((p) => p.id === currentPageId);
 
-  // Guard: show loading screen until auth + data are ready
-  if (ready === 'loading') return <LoadingScreen />;
-  if (!user) return null;
+  // Guard: render nothing while auth is resolving or user is not signed in
+  if (loading || !user) return null;
 
   return (
     <div 
