@@ -360,25 +360,56 @@ export const TopBar: React.FC<TopBarProps> = ({
   return (
     <div className="relative flex w-full shrink-0 flex-col">
       <div className="picaro-topbar-shell grid min-h-[58px] w-full shrink-0 grid-cols-[auto_1fr_auto] items-center gap-4 px-4">
-        <div className="flex min-w-0 items-center gap-1">
-          <button
-            type="button"
-            title="Undo"
-            disabled={!canUndo}
-            onClick={() => canUndo && triggerUndo()}
-            className={`picaro-tool-hit picaro-focus shrink-0 border-0 ${canUndo ? 'picaro-tool-hit--inactive text-white' : 'cursor-default text-[#525252] opacity-50'}`}
-          >
-            <Undo2 size={18} strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            title="Redo"
-            disabled={!canRedo}
-            onClick={() => canRedo && triggerRedo()}
-            className={`picaro-tool-hit picaro-focus shrink-0 border-0 ${canRedo ? 'picaro-tool-hit--inactive text-white' : 'cursor-default text-[#525252] opacity-50'}`}
-          >
-            <Redo2 size={18} strokeWidth={2} />
-          </button>
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              title="Undo"
+              disabled={!canUndo}
+              onClick={() => canUndo && triggerUndo()}
+              className={`picaro-tool-hit picaro-focus shrink-0 border-0 ${canUndo ? 'picaro-tool-hit--inactive text-white' : 'cursor-default text-[#525252] opacity-50'}`}
+            >
+              <Undo2 size={18} strokeWidth={2} />
+            </button>
+            <button
+              type="button"
+              title="Redo"
+              disabled={!canRedo}
+              onClick={() => canRedo && triggerRedo()}
+              className={`picaro-tool-hit picaro-focus shrink-0 border-0 ${canRedo ? 'picaro-tool-hit--inactive text-white' : 'cursor-default text-[#525252] opacity-50'}`}
+            >
+              <Redo2 size={18} strokeWidth={2} />
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-white/[0.1]"></div>
+
+          <div className="flex items-center gap-1 rounded-[12px] bg-[#0b0b0d]/50 p-1 border border-white/[0.08] shadow-inner">
+            <button
+              type="button"
+              title="Toggle Left Panel"
+              onClick={toggleLeftPanel}
+              className={`flex h-[30px] w-[34px] items-center justify-center rounded-[8px] transition-all ${isLeftPanelOpen ? 'bg-white/[0.12] text-white shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-white/[0.06]' : 'text-white/40 hover:text-white/90 hover:bg-white/[0.06]'}`}
+            >
+              <PanelLeft size={16} strokeWidth={1.8} />
+            </button>
+            <button
+              type="button"
+              title="Toggle Bottom Panel"
+              onClick={toggleBottomPanel}
+              className={`flex h-[30px] w-[34px] items-center justify-center rounded-[8px] transition-all ${isBottomPanelOpen ? 'bg-white/[0.12] text-white shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-white/[0.06]' : 'text-white/40 hover:text-white/90 hover:bg-white/[0.06]'}`}
+            >
+              <PanelBottom size={16} strokeWidth={1.8} />
+            </button>
+            <button
+              type="button"
+              title="Toggle Right Panel"
+              onClick={toggleRightPanel}
+              className={`flex h-[30px] w-[34px] items-center justify-center rounded-[8px] transition-all ${isRightPanelOpen ? 'bg-white/[0.12] text-white shadow-[0_2px_8px_rgba(0,0,0,0.2)] border border-white/[0.06]' : 'text-white/40 hover:text-white/90 hover:bg-white/[0.06]'}`}
+            >
+              <PanelRight size={16} strokeWidth={1.8} />
+            </button>
+          </div>
         </div>
 
 
@@ -407,35 +438,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
 
         <div className="flex justify-end">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center rounded-[10px] bg-[#1a1a1a] p-[3px] border border-white/[0.05] shadow-inner">
-              <button
-                type="button"
-                title="Toggle Left Panel"
-                onClick={toggleLeftPanel}
-                className={`p-1.5 rounded-[8px] transition-all ${isLeftPanelOpen ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70 hover:bg-white/5'}`}
-              >
-                <PanelLeft size={18} strokeWidth={1.8} />
-              </button>
-              <button
-                type="button"
-                title="Toggle Bottom Panel"
-                onClick={toggleBottomPanel}
-                className={`p-1.5 rounded-[8px] transition-all ${isBottomPanelOpen ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70 hover:bg-white/5'}`}
-              >
-                <PanelBottom size={18} strokeWidth={1.8} />
-              </button>
-              <button
-                type="button"
-                title="Toggle Right Panel"
-                onClick={toggleRightPanel}
-                className={`p-1.5 rounded-[8px] transition-all ${isRightPanelOpen ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70 hover:bg-white/5'}`}
-              >
-                <PanelRight size={18} strokeWidth={1.8} />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             {user && (
               <div className="flex items-center gap-1.5 rounded-md border border-white/[0.06] bg-white/[0.04] px-2 py-1">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">
@@ -463,7 +466,6 @@ export const TopBar: React.FC<TopBarProps> = ({
               signOut={signOut}
               onOpenAuth={() => setAuthOpen(true)}
             />
-            </div>
           </div>
         </div>
       </div>
