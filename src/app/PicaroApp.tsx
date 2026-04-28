@@ -28,11 +28,11 @@ export default function PicaroApp() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/');
-    }
-  }, [user, loading, navigate]);
+  // ── All hooks must be declared before any early return ──────────────────
+  const canvasExportRef = useRef<Record<number, string>>({});
+  const saveTimeoutRef = useRef<number | null>(null);
+  const temporaryToolRef = useRef<null | 'brush' | 'eraser' | 'text' | 'move' | 'picker' | 'paint' | 'hand' | 'shape'>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const {
     selectedStyle,
@@ -70,14 +70,6 @@ export default function PicaroApp() {
     deleteProjectFromDatabase,
   } = useDatabase();
 
-  if (loading) return null;
-  if (!user) return null;
-
-  const canvasExportRef = useRef<Record<number, string>>({});
-  const saveTimeoutRef = useRef<number | null>(null);
-  const temporaryToolRef = useRef<null | 'brush' | 'eraser' | 'text' | 'move' | 'picker' | 'paint' | 'hand' | 'shape'>(null);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-
   const orderedPageIds = useMemo(
     () => [...pages].sort((a, b) => a.id - b.id).map((page) => page.id),
     [pages]
@@ -86,6 +78,12 @@ export default function PicaroApp() {
     () => characterSeeds.filter((seed) => projectSeedIds.includes(seed.id)),
     [characterSeeds, projectSeedIds]
   );
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/');
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     canvasExportRef.current = {};
@@ -393,6 +391,9 @@ export default function PicaroApp() {
   }, [currentPageId, pages]);
 
   const currentPage = pages.find((p) => p.id === currentPageId);
+
+  // Guard: render nothing while auth is resolving or user is not signed in
+  if (loading || !user) return null;
 
   return (
     <div 
