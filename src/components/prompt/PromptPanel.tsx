@@ -302,7 +302,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
   };
 
   return (
-    <div className="picaro-panel-right relative flex h-full w-[340px] shrink-0 flex-col rounded-t-[24px] rounded-b-none border border-b-0 border-white/[0.08] bg-[#0b0b0d] shadow-[var(--picaro-elev-2)] overflow-hidden">
+    <div className="picaro-panel-right relative flex h-full w-[340px] shrink-0 flex-col border-l border-white/[0.08] bg-[#0b0b0d] shadow-[var(--picaro-elev-2)] overflow-hidden">
       <div className="shrink-0 border-b border-white/[0.04] px-5 py-5 bg-[#0a0a0c]">
         <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-white/30 block mb-3">
           Main Command

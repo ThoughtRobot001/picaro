@@ -426,7 +426,7 @@ export default function PicaroApp() {
           <Filmstrip deletePageFromDatabase={deletePageFromDatabase} />
         </div>
 
-        <div className="shrink-0 flex self-stretch pt-3 pb-0 pr-3">
+        <div className="shrink-0 flex self-stretch">
           <PromptPanel
             getCanvasDataURL={getCanvasDataURL}
             onGenerated={handleGenerated}
