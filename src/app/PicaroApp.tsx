@@ -414,6 +414,11 @@ export default function PicaroApp() {
         <LeftToolbar />
 
         <div className="flex min-w-0 flex-1 flex-col min-h-0 overflow-hidden">
+          {/* Small Canvas Toolbar */}
+          <div className="flex h-10 shrink-0 items-center border-b border-white/[0.04] bg-[#0a0a0c] px-4 shadow-sm">
+            {/* Reserved for future canvas-specific tools or breadcrumbs */}
+          </div>
+
           <div className="flex min-h-0 flex-1 flex-row gap-3 p-3">
             <PicaroCanvas onExport={handleCanvasExport} />
             <OutputPanel
