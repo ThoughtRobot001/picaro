@@ -1,7 +1,7 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Sparkles, ArrowRight, Loader2, Brush, Eraser, PaintBucket, ChevronDown, Minus, Plus, Check, Zap, Layers, Image as ImageIcon, Lock, UserPlus, Users, Palette, Github, Twitter, Instagram, ArrowUpRight
+  Sparkles, ArrowRight, Loader2, Brush, Eraser, PaintBucket, ChevronDown, Minus, Plus, Check, Zap, Layers, Image as ImageIcon, Lock, UserPlus, Users, Palette, Github, Twitter, Instagram, ArrowUpRight, Undo2, Redo2
 } from 'lucide-react';
 import { AuthModal } from '../components/auth/AuthModal';
 import { useAuth } from '../lib/useAuth';
@@ -41,21 +41,66 @@ function getGuestToken(): string {
 const GUEST_USED_KEY = 'picaro_guest_used';
 
 // ─── MINI CANVAS ─────────────────────────────────────
-function MiniCanvas({
-  canvasRef,
-  activeTool,
-  brushSize,
-  brushColor,
-}: {
+export interface MiniCanvasRef {
+  undo: () => void;
+  redo: () => void;
+}
+
+const MiniCanvas = forwardRef<MiniCanvasRef, {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   activeTool: 'brush' | 'eraser' | 'fill';
   brushSize: number;
   brushColor: string;
-}) {
+  onHistoryChange: (canUndo: boolean, canRedo: boolean) => void;
+}>(({
+  canvasRef,
+  activeTool,
+  brushSize,
+  brushColor,
+  onHistoryChange
+}, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDrawing = useRef(false);
   const offscreenRef = useRef<HTMLCanvasElement | null>(null);
   const snapshotRef = useRef<ImageData | null>(null);
+
+  const undoStack = useRef<ImageData[]>([]);
+  const redoStack = useRef<ImageData[]>([]);
+
+  const saveStateForUndo = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    undoStack.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    redoStack.current = [];
+    onHistoryChange(undoStack.current.length > 0, redoStack.current.length > 0);
+  };
+
+  useImperativeHandle(ref, () => ({
+    undo: () => {
+      if (undoStack.current.length === 0) return;
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d', { willReadFrequently: true });
+      if (!ctx || !canvas) return;
+      
+      redoStack.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+      const previousState = undoStack.current.pop()!;
+      ctx.putImageData(previousState, 0, 0);
+      onHistoryChange(undoStack.current.length > 0, redoStack.current.length > 0);
+    },
+    redo: () => {
+      if (redoStack.current.length === 0) return;
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d', { willReadFrequently: true });
+      if (!ctx || !canvas) return;
+      
+      undoStack.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+      const nextState = redoStack.current.pop()!;
+      ctx.putImageData(nextState, 0, 0);
+      onHistoryChange(undoStack.current.length > 0, redoStack.current.length > 0);
+    }
+  }));
 
   const floodFill = (startX: number, startY: number) => {
     const canvas = canvasRef.current;
@@ -122,6 +167,10 @@ function MiniCanvas({
     offscreenRef.current = document.createElement('canvas');
     offscreenRef.current.width = canvas.width;
     offscreenRef.current.height = canvas.height;
+
+    undoStack.current = [];
+    redoStack.current = [];
+    onHistoryChange(false, false);
   }, []);
 
   const getCoords = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -143,6 +192,8 @@ function MiniCanvas({
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d', { willReadFrequently: true });
     if (!ctx || !canvas) return;
+
+    saveStateForUndo();
 
     if (activeTool === 'fill') {
       floodFill(coords.x, coords.y);
@@ -236,7 +287,7 @@ function MiniCanvas({
       </div>
     </div>
   );
-}
+});
 
 // ─── COMPARISON SLIDER ────────────────────────────────
 function ComparisonSlider() {
@@ -387,6 +438,9 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const miniCanvasRef = useRef<MiniCanvasRef>(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
   const [activeTool, setActiveTool] = useState<'brush' | 'eraser' | 'fill'>('brush');
   const [brushSize, setBrushSize] = useState(6);
   const [brushColor, setBrushColor] = useState('#000000');
@@ -599,6 +653,11 @@ export default function LandingPage() {
                       <button onClick={() => setActiveTool('fill')} className={`p-2 rounded-lg transition-all ${activeTool === 'fill' ? 'bg-white/10 text-white' : 'text-white/40'}`}><PaintBucket size={14} /></button>
                     </div>
                     <div className="w-px h-6 bg-white/10 mx-2" />
+                    <div className="flex bg-white/5 p-1 rounded-xl">
+                      <button disabled={!canUndo} onClick={() => miniCanvasRef.current?.undo()} className={`p-2 rounded-lg transition-all ${canUndo ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/20'}`}><Undo2 size={14} /></button>
+                      <button disabled={!canRedo} onClick={() => miniCanvasRef.current?.redo()} className={`p-2 rounded-lg transition-all ${canRedo ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/20'}`}><Redo2 size={14} /></button>
+                    </div>
+                    <div className="w-px h-6 bg-white/10 mx-2" />
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-white/40 font-mono w-4">{brushSize}</span>
                       <input
@@ -663,7 +722,14 @@ export default function LandingPage() {
 
                 {/* Canvas Container */}
                 <div className="h-[300px] md:h-[400px]">
-                  <MiniCanvas canvasRef={canvasRef} activeTool={activeTool} brushSize={brushSize} brushColor={brushColor} />
+                  <MiniCanvas 
+                    ref={miniCanvasRef}
+                    canvasRef={canvasRef} 
+                    activeTool={activeTool} 
+                    brushSize={brushSize} 
+                    brushColor={brushColor} 
+                    onHistoryChange={(u, r) => { setCanUndo(u); setCanRedo(r); }}
+                  />
                 </div>
 
                 {/* Prompt & Generate */}
