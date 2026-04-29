@@ -17,7 +17,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { sketchDataURL, guestToken } = body;
+    const { sketchDataURL, guestToken, prompt } = body;
 
     if (!sketchDataURL || !guestToken) {
       return new Response(
@@ -76,11 +76,9 @@ serve(async (req) => {
     const replicateURL =
       'https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions';
 
-    const prompt =
-      'Transform this hand-drawn sketch into a photorealistic product photograph. ' +
-      'Preserve the exact shape, proportions, and composition of the original sketch. ' +
-      'Studio lighting, clean white background, isolated object, sharp focus, 4K, ' +
-      'professional product photography.';
+    const generationPrompt = prompt
+      ? `${prompt}, photorealistic style, clean white background, studio lighting, sharp focus, 4K`
+      : 'Transform this hand-drawn sketch into a photorealistic product photograph. Preserve the exact shape, proportions, and composition of the original sketch. Studio lighting, clean white background, isolated object, sharp focus, 4K, professional product photography.';
 
     const startResponse = await fetch(replicateURL, {
       method: 'POST',
@@ -91,7 +89,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         input: {
-          prompt,
+          prompt: generationPrompt,
           input_image: sketchDataURL,
           aspect_ratio: '1:1',
           output_format: 'png',

@@ -336,6 +336,7 @@ export default function LandingPage() {
   const [guestUsed, setGuestUsed] = useState(
     localStorage.getItem(GUEST_USED_KEY) === 'true'
   );
+  const [heroPrompt, setHeroPrompt] = useState('a young boy with red hair looking up at the stars');
 
   useEffect(() => {
     if (user) navigate('/app');
@@ -369,7 +370,7 @@ export default function LandingPage() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sketchDataURL: dataURL, guestToken }),
+          body: JSON.stringify({ sketchDataURL: dataURL, guestToken, prompt: heroPrompt }),
         }
       );
 
@@ -532,11 +533,12 @@ export default function LandingPage() {
                 {/* Prompt & Generate */}
                 <div className="flex flex-col gap-2 relative">
                   <div className="absolute top-2 right-3 font-mono text-[10px] text-teal-500 uppercase tracking-wider bg-teal-500/10 px-2 py-0.5 rounded">Prompt</div>
-                  <textarea
-                    className="w-full bg-[#111] border border-white/10 rounded-2xl p-4 text-[14px] text-white resize-none outline-none focus:border-teal-500/50 transition-colors"
-                    rows={2}
-                    defaultValue="a young boy with red hair looking up at the stars"
-                    readOnly
+                  <input
+                    type="text"
+                    value={heroPrompt}
+                    onChange={(e) => setHeroPrompt(e.target.value)}
+                    placeholder="Describe what you drew... (optional)"
+                    className="w-full bg-[#111] border border-white/10 rounded-2xl p-4 text-[14px] text-white outline-none focus:border-teal-500/50 transition-colors placeholder-white/20 font-mono text-[13px]"
                   />
                   <button
                     onClick={handleGenerate} disabled={isGenerating}
