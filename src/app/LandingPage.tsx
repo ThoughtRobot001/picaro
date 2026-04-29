@@ -447,6 +447,7 @@ export default function LandingPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [isYearly, setIsYearly] = useState(false);
   const [styleOpen, setStyleOpen] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState('photorealistic');
@@ -480,6 +481,7 @@ export default function LandingPage() {
     if (isGenerating) return;
 
     if (guestUsed) {
+      setAuthMode('signup');
       setAuthOpen(true);
       return;
     }
@@ -525,6 +527,7 @@ export default function LandingPage() {
         localStorage.setItem(GUEST_USED_KEY, 'true');
         setGuestUsed(true);
       } else if (data.error === 'GUEST_LIMIT_REACHED') {
+        setAuthMode('signup');
         setAuthOpen(true);
       } else {
         setError(
@@ -580,7 +583,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <motion.button
               type="button"
-              onClick={() => setAuthOpen(true)}
+              onClick={() => { setAuthMode('login'); setAuthOpen(true); }}
               {...btnMotion}
               className="text-[13px] font-medium text-white/60 hover:text-white transition-colors"
             >
@@ -588,7 +591,7 @@ export default function LandingPage() {
             </motion.button>
             <motion.button
               type="button"
-              onClick={() => setAuthOpen(true)}
+              onClick={() => { setAuthMode('signup'); setAuthOpen(true); }}
               {...btnMotion}
               className="px-5 h-10 rounded-full font-bold text-[13px] bg-white text-black flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
             >
@@ -629,7 +632,7 @@ export default function LandingPage() {
           {/* CTA Buttons */}
           <motion.div {...fadeUp(0.3)} className="flex items-center gap-4">
             <motion.button
-              onClick={() => setAuthOpen(true)}
+              onClick={() => { setAuthMode('signup'); setAuthOpen(true); }}
               {...btnMotion}
               className="px-8 h-14 rounded-2xl font-outfit text-[16px] font-bold bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]"
             >
@@ -1089,7 +1092,7 @@ export default function LandingPage() {
                 'Personal use only'
               ]}
               cta="Try it out →"
-              onCTA={() => setAuthOpen(true)}
+              onCTA={() => { setAuthMode('signup'); setAuthOpen(true); }}
             />
             <PricingCard
               name="Starter"
@@ -1106,7 +1109,7 @@ export default function LandingPage() {
               ]}
               highlighted
               cta="Go Pro →"
-              onCTA={() => setAuthOpen(true)}
+              onCTA={() => { setAuthMode('signup'); setAuthOpen(true); }}
             />
             <PricingCard
               name="Creator"
@@ -1122,7 +1125,7 @@ export default function LandingPage() {
                 'dedicated support'
               ]}
               cta="Unleash Power →"
-              onCTA={() => setAuthOpen(true)}
+              onCTA={() => { setAuthMode('signup'); setAuthOpen(true); }}
             />
           </div>
         </section>
@@ -1211,7 +1214,7 @@ export default function LandingPage() {
       </footer>
 
       {/* Auth Modal */}
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} onSuccess={() => navigate('/app')} />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} onSuccess={() => navigate('/app')} initialMode={authMode} />
     </div>
   );
 }
