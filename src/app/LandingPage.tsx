@@ -454,6 +454,7 @@ export default function LandingPage() {
     localStorage.getItem(GUEST_USED_KEY) === 'true'
   );
   const [heroPrompt, setHeroPrompt] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) navigate('/app');
@@ -477,6 +478,7 @@ export default function LandingPage() {
 
   const handleGenerate = async () => {
     if (isGenerating) return;
+
     if (guestUsed) {
       setAuthOpen(true);
       return;
@@ -485,6 +487,7 @@ export default function LandingPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Export with white background
     const exportCanvas = document.createElement('canvas');
     exportCanvas.width = canvas.width;
     exportCanvas.height = canvas.height;
@@ -496,27 +499,43 @@ export default function LandingPage() {
 
     const guestToken = getGuestToken();
     setIsGenerating(true);
+    setError(null);
 
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-guest`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sketchDataURL: dataURL, guestToken, prompt: heroPrompt, style: selectedStyle }),
+          headers: { 
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({
+            sketchDataURL: dataURL,
+            guestToken,
+            prompt: heroPrompt,
+            style: selectedStyle,
+          }),
         }
       );
 
       const data = await response.json();
+
       if (data.success && data.imageURL) {
         setGeneratedImage(data.imageURL);
         localStorage.setItem(GUEST_USED_KEY, 'true');
         setGuestUsed(true);
       } else if (data.error === 'GUEST_LIMIT_REACHED') {
         setAuthOpen(true);
+      } else {
+        setError(
+          data.message || 
+          'Generation failed. Please try again.'
+        );
       }
     } catch {
-      // silently fail on landing
+      setError(
+        'Something went wrong. Please try again.'
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -747,8 +766,22 @@ export default function LandingPage() {
                     onClick={handleGenerate} disabled={isGenerating}
                     className="w-full h-12 rounded-xl font-mono text-[12px] uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-600 text-white hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] disabled:opacity-50"
                   >
-                    {isGenerating ? <><Loader2 size={16} className="animate-spin" /> Generating...</> : guestUsed ? "Sign up to keep generating" : "Generate with Picora"}
+                    {isGenerating ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Generating...
+                      </>
+                    ) : guestUsed ? (
+                      'Sign Up to Keep Creating →'
+                    ) : (
+                      'GENERATE WITH PICORA'
+                    )}
                   </button>
+                  {error && (
+                    <p className="text-red-400 text-[12px] font-mono text-center mt-2">
+                      {error}
+                    </p>
+                  )}
                 </div>
               </div>
 
