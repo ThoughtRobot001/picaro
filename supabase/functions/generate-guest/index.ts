@@ -17,7 +17,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { sketchDataURL, guestToken, prompt } = body;
+    const { sketchDataURL, guestToken, prompt, style } = body;
 
     if (!sketchDataURL || !guestToken) {
       return new Response(
@@ -76,9 +76,21 @@ serve(async (req) => {
     const replicateURL =
       'https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions';
 
-    const generationPrompt = prompt
-      ? `${prompt}, photorealistic style, clean white background, studio lighting, sharp focus, 4K`
-      : 'Transform this hand-drawn sketch into a photorealistic product photograph. Preserve the exact shape, proportions, and composition of the original sketch. Studio lighting, clean white background, isolated object, sharp focus, 4K, professional product photography.';
+    const stylePrompts: Record<string, string> = {
+      photorealistic: 'product photography, studio lighting, clean white background, sharp focus, 4K',
+      anime: 'anime style, cel shaded, vibrant colors, clean white background',
+      manga: 'manga illustration, clean linework, black and white, bold outlines',
+      watercolor: 'watercolor painting, soft colors, white background',
+      oilpainting: 'oil painting, classical style, rich brushwork',
+      sketch: 'refined pencil sketch, clean linework, white paper',
+    };
+
+    const styleText = stylePrompts[style ?? 'photorealistic']
+      ?? 'photorealistic, studio lighting, white background';
+
+    const generationPrompt = prompt?.trim()
+      ? `${prompt.trim()}, ${styleText}, preserve the exact pose and composition of the sketch`
+      : `${styleText}, preserve the exact shape and composition of the sketch`;
 
     const startResponse = await fetch(replicateURL, {
       method: 'POST',
