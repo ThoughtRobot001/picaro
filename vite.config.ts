@@ -25,7 +25,7 @@ export default defineConfig({
     tailwindcss(),
     prerender({
       routes: ['/', '/pricing', '/features'],
-      renderer: '@prerenderer/renderer-puppeteer',
+      renderer: '@prerenderer/renderer-jsdom',
       server: {
         host: 'localhost',
       },

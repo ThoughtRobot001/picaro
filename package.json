@@ -13,6 +13,7 @@
     "@mui/icons-material": "7.3.5",
     "@mui/material": "7.3.5",
     "@popperjs/core": "2.11.8",
+    "@prerenderer/renderer-jsdom": "^1.1.9",
     "@prerenderer/renderer-puppeteer": "^1.2.4",
     "@prerenderer/rollup-plugin": "^0.3.12",
     "@radix-ui/react-accordion": "1.2.3",
