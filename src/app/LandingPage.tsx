@@ -677,47 +677,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                   
-                  {/* Style Selector */}
-                  <div className="relative style-dropdown-container">
-                    <button
-                      onClick={() => setStyleOpen(!styleOpen)}
-                      className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
-                    >
-                      <span className="font-outfit text-[12px] font-medium text-white/80">
-                        {OUTPUT_STYLES.find(s => s.id === selectedStyle)?.label || 'Style'}
-                      </span>
-                      <ChevronDown size={14} className="text-white/40" />
-                    </button>
-                    <AnimatePresence>
-                      {styleOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                          className="absolute right-0 top-full mt-2 w-40 bg-[#111] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
-                        >
-                          <div className="p-1 flex flex-col gap-0.5">
-                            {OUTPUT_STYLES.map(style => (
-                              <button
-                                key={style.id}
-                                onClick={() => {
-                                  setSelectedStyle(style.id);
-                                  setStyleOpen(false);
-                                }}
-                                className={`text-left px-3 py-2 text-[12px] font-medium rounded-xl transition-colors ${
-                                  selectedStyle === style.id
-                                    ? 'bg-teal-500/10 text-teal-400'
-                                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                                }`}
-                              >
-                                {style.label}
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+
                 </div>
 
                 {/* Canvas Container */}
@@ -742,6 +702,47 @@ export default function LandingPage() {
                     placeholder="Describe what you drew... (optional)"
                     className="w-full bg-[#111] border border-white/10 rounded-2xl p-4 text-[14px] text-white outline-none focus:border-teal-500/50 transition-colors placeholder-white/20 font-mono text-[13px]"
                   />
+                  {/* Style Selector */}
+                  <div className="relative style-dropdown-container w-full">
+                    <button
+                      onClick={() => setStyleOpen(!styleOpen)}
+                      className="flex w-full items-center justify-between gap-2 px-4 py-3 rounded-xl border border-white/10 bg-[#111] hover:bg-white/5 transition-colors"
+                    >
+                      <span className="font-outfit text-[14px] font-medium text-white/80">
+                        {OUTPUT_STYLES.find(s => s.id === selectedStyle)?.label || 'Style'}
+                      </span>
+                      <ChevronDown size={16} className="text-white/40" />
+                    </button>
+                    <AnimatePresence>
+                      {styleOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute left-0 bottom-full mb-2 w-full bg-[#111] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+                        >
+                          <div className="p-1 flex flex-col gap-0.5">
+                            {OUTPUT_STYLES.map(style => (
+                              <button
+                                key={style.id}
+                                onClick={() => {
+                                  setSelectedStyle(style.id);
+                                  setStyleOpen(false);
+                                }}
+                                className={`text-left px-3 py-2 text-[12px] font-medium rounded-xl transition-colors ${
+                                  selectedStyle === style.id
+                                    ? 'bg-teal-500/10 text-teal-400'
+                                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                                }`}
+                              >
+                                {style.label}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                   <button
                     onClick={handleGenerate} disabled={isGenerating}
                     className="w-full h-12 rounded-xl font-mono text-[12px] uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-600 text-white hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] disabled:opacity-50"
