@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Sparkles, ArrowRight, Loader2, Brush, Eraser, Minus, Plus, Check, Zap, Layers, Image as ImageIcon, Lock, UserPlus, Users, Palette, Github, Twitter, Instagram, ArrowUpRight
+  Sparkles, ArrowRight, Loader2, Brush, Eraser, PaintBucket, ChevronDown, Minus, Plus, Check, Zap, Layers, Image as ImageIcon, Lock, UserPlus, Users, Palette, Github, Twitter, Instagram, ArrowUpRight
 } from 'lucide-react';
 import { AuthModal } from '../components/auth/AuthModal';
 import { useAuth } from '../lib/useAuth';
@@ -48,7 +48,7 @@ function MiniCanvas({
   brushColor,
 }: {
   canvasRef: React.RefObject<HTMLCanvasElement>;
-  activeTool: 'brush' | 'eraser';
+  activeTool: 'brush' | 'eraser' | 'fill';
   brushSize: number;
   brushColor: string;
 }) {
@@ -56,6 +56,53 @@ function MiniCanvas({
   const isDrawing = useRef(false);
   const offscreenRef = useRef<HTMLCanvasElement | null>(null);
   const snapshotRef = useRef<ImageData | null>(null);
+
+  const floodFill = (startX: number, startY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    ctx.imageSmoothingEnabled = false;
+    const { width, height } = canvas;
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    const sx = Math.round(startX);
+    const sy = Math.round(startY);
+    const idx = (sy * width + sx) * 4;
+    const tR = data[idx], tG = data[idx+1],
+          tB = data[idx+2], tA = data[idx+3];
+    const hex = brushColor.replace('#', '');
+    const fR = parseInt(hex.slice(0,2), 16);
+    const fG = parseInt(hex.slice(2,4), 16);
+    const fB = parseInt(hex.slice(4,6), 16);
+    const fA = 255;
+    if (tR===fR && tG===fG && tB===fB && tA===fA) return;
+    const tolerance = 30;
+    const matches = (i: number) =>
+      Math.abs(data[i]-tR) <= tolerance &&
+      Math.abs(data[i+1]-tG) <= tolerance &&
+      Math.abs(data[i+2]-tB) <= tolerance &&
+      Math.abs(data[i+3]-tA) <= tolerance;
+    const stack = [[sx, sy]];
+    const visited = new Uint8Array(width * height);
+    visited[sy * width + sx] = 1;
+    while (stack.length > 0) {
+      const [x, y] = stack.pop()!;
+      const i = (y * width + x) * 4;
+      data[i]=fR; data[i+1]=fG;
+      data[i+2]=fB; data[i+3]=fA;
+      for (const [nx, ny] of [
+        [x+1,y],[x-1,y],[x,y+1],[x,y-1]
+      ]) {
+        if (nx<0||ny<0||nx>=width||ny>=height) continue;
+        const ni = ny*width+nx;
+        if (!visited[ni] && matches(ni*4)) {
+          visited[ni]=1; stack.push([nx,ny]);
+        }
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -96,6 +143,11 @@ function MiniCanvas({
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d', { willReadFrequently: true });
     if (!ctx || !canvas) return;
+
+    if (activeTool === 'fill') {
+      floodFill(coords.x, coords.y);
+      return;
+    }
 
     if (activeTool === 'brush') {
       snapshotRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -321,26 +373,53 @@ function PricingCard({
   );
 }
 
+const OUTPUT_STYLES = [
+  { id: 'photorealistic', label: 'Photorealistic' },
+  { id: 'anime', label: 'Anime' },
+  { id: 'manga', label: 'Manga' },
+  { id: 'watercolor', label: 'Watercolor' },
+  { id: 'oilpainting', label: 'Oil Painting' },
+  { id: 'sketch', label: 'Sketch' },
+];
+
 // ─── MAIN LANDING PAGE ────────────────────────────────
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [activeTool, setActiveTool] = useState<'brush' | 'eraser'>('brush');
+  const [activeTool, setActiveTool] = useState<'brush' | 'eraser' | 'fill'>('brush');
   const [brushSize, setBrushSize] = useState(6);
   const [brushColor, setBrushColor] = useState('#000000');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [isYearly, setIsYearly] = useState(false);
+  const [styleOpen, setStyleOpen] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState('photorealistic');
   const [guestUsed, setGuestUsed] = useState(
     localStorage.getItem(GUEST_USED_KEY) === 'true'
   );
-  const [heroPrompt, setHeroPrompt] = useState('a young boy with red hair looking up at the stars');
+  const [heroPrompt, setHeroPrompt] = useState('');
 
   useEffect(() => {
     if (user) navigate('/app');
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (!styleOpen) return;
+    const close = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.style-dropdown-container')) return;
+      setStyleOpen(false);
+    };
+    const t = window.setTimeout(
+      () => document.addEventListener('mousedown', close), 0
+    );
+    return () => {
+      window.clearTimeout(t);
+      document.removeEventListener('mousedown', close);
+    };
+  }, [styleOpen]);
 
   const handleGenerate = async () => {
     if (isGenerating) return;
@@ -370,7 +449,7 @@ export default function LandingPage() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sketchDataURL: dataURL, guestToken, prompt: heroPrompt }),
+          body: JSON.stringify({ sketchDataURL: dataURL, guestToken, prompt: heroPrompt, style: selectedStyle }),
         }
       );
 
@@ -512,16 +591,73 @@ export default function LandingPage() {
               {/* Left pane: Canvas */}
               <div className="flex flex-col gap-4">
                 {/* Toolbar */}
-                <div className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-white/[0.08] bg-[#111]">
-                  <div className="flex bg-white/5 p-1 rounded-xl">
-                    <button onClick={() => setActiveTool('brush')} className={`p-2 rounded-lg transition-all ${activeTool === 'brush' ? 'bg-white/10 text-white' : 'text-white/40'}`}><Brush size={14} /></button>
-                    <button onClick={() => setActiveTool('eraser')} className={`p-2 rounded-lg transition-all ${activeTool === 'eraser' ? 'bg-white/10 text-white' : 'text-white/40'}`}><Eraser size={14} /></button>
+                <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 rounded-2xl border border-white/[0.08] bg-[#111]">
+                  <div className="flex items-center gap-2">
+                    <div className="flex bg-white/5 p-1 rounded-xl">
+                      <button onClick={() => setActiveTool('brush')} className={`p-2 rounded-lg transition-all ${activeTool === 'brush' ? 'bg-white/10 text-white' : 'text-white/40'}`}><Brush size={14} /></button>
+                      <button onClick={() => setActiveTool('eraser')} className={`p-2 rounded-lg transition-all ${activeTool === 'eraser' ? 'bg-white/10 text-white' : 'text-white/40'}`}><Eraser size={14} /></button>
+                      <button onClick={() => setActiveTool('fill')} className={`p-2 rounded-lg transition-all ${activeTool === 'fill' ? 'bg-white/10 text-white' : 'text-white/40'}`}><PaintBucket size={14} /></button>
+                    </div>
+                    <div className="w-px h-6 bg-white/10 mx-2" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-white/40 font-mono w-4">{brushSize}</span>
+                      <input
+                        type="range"
+                        min="2"
+                        max="20"
+                        value={brushSize}
+                        onChange={(e) => setBrushSize(parseInt(e.target.value))}
+                        className="w-16 accent-teal-500"
+                      />
+                    </div>
+                    <div className="w-px h-6 bg-white/10 mx-2" />
+                    <div className="flex gap-1.5">
+                      {['#000000', '#ef4444', '#3b82f6', '#22c55e'].map(c => (
+                        <button key={c} onClick={() => { setBrushColor(c); setActiveTool(activeTool === 'fill' ? 'fill' : 'brush'); }} className={`w-6 h-6 rounded-full border-2 transition-all ${brushColor === c ? 'border-white scale-110' : 'border-transparent'}`} style={{ background: c }} />
+                      ))}
+                    </div>
                   </div>
-                  <div className="w-px h-6 bg-white/10 mx-2" />
-                  <div className="flex gap-1.5">
-                    {['#000000', '#ef4444', '#3b82f6', '#22c55e'].map(c => (
-                      <button key={c} onClick={() => { setBrushColor(c); setActiveTool('brush'); }} className={`w-6 h-6 rounded-full border-2 transition-all ${brushColor === c && activeTool === 'brush' ? 'border-white scale-110' : 'border-transparent'}`} style={{ background: c }} />
-                    ))}
+                  
+                  {/* Style Selector */}
+                  <div className="relative style-dropdown-container">
+                    <button
+                      onClick={() => setStyleOpen(!styleOpen)}
+                      className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                    >
+                      <span className="font-outfit text-[12px] font-medium text-white/80">
+                        {OUTPUT_STYLES.find(s => s.id === selectedStyle)?.label || 'Style'}
+                      </span>
+                      <ChevronDown size={14} className="text-white/40" />
+                    </button>
+                    <AnimatePresence>
+                      {styleOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                          className="absolute right-0 top-full mt-2 w-40 bg-[#111] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+                        >
+                          <div className="p-1 flex flex-col gap-0.5">
+                            {OUTPUT_STYLES.map(style => (
+                              <button
+                                key={style.id}
+                                onClick={() => {
+                                  setSelectedStyle(style.id);
+                                  setStyleOpen(false);
+                                }}
+                                className={`text-left px-3 py-2 text-[12px] font-medium rounded-xl transition-colors ${
+                                  selectedStyle === style.id
+                                    ? 'bg-teal-500/10 text-teal-400'
+                                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                                }`}
+                              >
+                                {style.label}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 
