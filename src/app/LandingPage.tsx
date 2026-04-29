@@ -52,12 +52,14 @@ const MiniCanvas = forwardRef<MiniCanvasRef, {
   brushSize: number;
   brushColor: string;
   onHistoryChange: (canUndo: boolean, canRedo: boolean) => void;
+  onStartDrawing?: () => void;
 }>(({
   canvasRef,
   activeTool,
   brushSize,
   brushColor,
-  onHistoryChange
+  onHistoryChange,
+  onStartDrawing,
 }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDrawing = useRef(false);
@@ -188,6 +190,7 @@ const MiniCanvas = forwardRef<MiniCanvasRef, {
     if (!coords) return;
     isDrawing.current = true;
     e.currentTarget.setPointerCapture(e.pointerId);
+    onStartDrawing?.();
 
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d', { willReadFrequently: true });
@@ -477,6 +480,20 @@ export default function LandingPage() {
     };
   }, [styleOpen]);
 
+// ─── CANVAS EMPTY CHECK ───────────────────────────────
+const isCanvasEmpty = (canvas: HTMLCanvasElement): boolean => {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return true;
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i] < 250 || data[i + 1] < 250 || data[i + 2] < 250) {
+      return false;
+    }
+  }
+  return true;
+};
+
   const handleGenerate = async () => {
     if (isGenerating) return;
 
@@ -488,6 +505,11 @@ export default function LandingPage() {
 
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    if (isCanvasEmpty(canvas)) {
+      setError('Draw something on the canvas first!');
+      return;
+    }
 
     // Export with white background
     const exportCanvas = document.createElement('canvas');
@@ -711,6 +733,7 @@ export default function LandingPage() {
                     brushSize={brushSize} 
                     brushColor={brushColor} 
                     onHistoryChange={(u, r) => { setCanUndo(u); setCanRedo(r); }}
+                    onStartDrawing={() => setError(null)}
                   />
                 </div>
 
