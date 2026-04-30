@@ -511,7 +511,6 @@ const isCanvasEmpty = (canvas: HTMLCanvasElement): boolean => {
       return;
     }
 
-    // Export with white background
     const exportCanvas = document.createElement('canvas');
     exportCanvas.width = canvas.width;
     exportCanvas.height = canvas.height;
@@ -526,13 +525,12 @@ const isCanvasEmpty = (canvas: HTMLCanvasElement): boolean => {
     setError(null);
 
     try {
-      const response = await fetch(
+      // ── Step 1: Start the prediction (~1s, no timeout risk) ──
+      const startResponse = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-guest`,
         {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json' 
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sketchDataURL: dataURL,
             guestToken,
@@ -542,26 +540,70 @@ const isCanvasEmpty = (canvas: HTMLCanvasElement): boolean => {
         }
       );
 
-      const data = await response.json();
+      const startData = await startResponse.json();
 
-      if (data.success && data.imageURL) {
-        setGeneratedImage(data.imageURL);
-        localStorage.setItem(GUEST_USED_KEY, 'true');
-        setGuestUsed(true);
-      } else if (data.error === 'GUEST_LIMIT_REACHED') {
+      if (startData.error === 'GUEST_LIMIT_REACHED') {
         setAuthMode('signup');
         setAuthOpen(true);
-      } else {
-        setError(
-          data.message || 
-          'Generation failed. Please try again.'
-        );
+        setIsGenerating(false);
+        return;
       }
+
+      if (!startResponse.ok || !startData.predictionId) {
+        setError(startData.error || 'Failed to start generation. Please try again.');
+        setIsGenerating(false);
+        return;
+      }
+
+      const { predictionId } = startData;
+
+      // ── Step 2: Poll every 3s until done (max 3 minutes) ──
+      const POLL_INTERVAL_MS = 3000;
+      const MAX_POLLS = 60;
+      let polls = 0;
+
+      const poll = async (): Promise<void> => {
+        if (polls >= MAX_POLLS) {
+          setError('Generation timed out. Please try again.');
+          setIsGenerating(false);
+          return;
+        }
+        polls++;
+
+        const pollResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/poll-generation`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ predictionId, guestToken }),
+          }
+        );
+
+        const pollData = await pollResponse.json();
+
+        if (pollData.success && pollData.imageURL) {
+          setGeneratedImage(pollData.imageURL);
+          localStorage.setItem(GUEST_USED_KEY, 'true');
+          setGuestUsed(true);
+          setIsGenerating(false);
+          return;
+        }
+
+        if (pollData.status === 'failed' || (!pollResponse.ok && pollData.error)) {
+          setError('Generation failed. Please try again.');
+          setIsGenerating(false);
+          return;
+        }
+
+        // Still processing — wait and poll again
+        await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
+        return poll();
+      };
+
+      await poll();
+
     } catch {
-      setError(
-        'Something went wrong. Please try again.'
-      );
-    } finally {
+      setError('Something went wrong. Please try again.');
       setIsGenerating(false);
     }
   };
