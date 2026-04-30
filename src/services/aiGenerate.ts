@@ -207,9 +207,18 @@ async function buildPrompt(
     parts.push(
       'Place the character in the pose and scene shown in the sketch composition'
     );
+    parts.push(
+      'Do not add props, accessories, supports, frames, platforms, stands, or extra objects unless they are clearly and unambiguously drawn in the sketch'
+    );
   } else {
     parts.push(
       'Preserve the exact shape, proportions, and composition of the original sketch'
+    );
+    parts.push(
+      'Do not invent or add extra objects, props, supports, frames, platforms, perches, pedestals, tools, or background elements that are not clearly drawn'
+    );
+    parts.push(
+      'If marks near the body or feet are ambiguous, interpret them as part of the sketched subject rather than as separate objects'
     );
   }
   parts.push(styleConfig.quality);
@@ -263,7 +272,7 @@ export async function flux2GenerateWithSeed(
   _apiKey?: string
 ): Promise<GenerateResult> {
   const stylePrompts: Record<string, string> = {
-    photorealistic: 'photorealistic product photography, clean white background, studio lighting, sharp focus, 4K',
+    photorealistic: 'product photography, clean white background, studio lighting, sharp focus, 4K',
     manga: 'manga illustration style, clean linework, black and white, bold outlines',
     anime: 'anime style, cel shaded, vibrant colors, clean composition',
     watercolor: 'watercolor painting, soft colors, white background, artistic',
@@ -272,21 +281,67 @@ export async function flux2GenerateWithSeed(
   };
   const styleText = stylePrompts[style] ?? `${style} style, white background, clean`;
 
-  const promptParts = [
-    'Using image 1 as the pose and composition guide',
-    'and image 2 as the character reference',
-    `generate a ${styleText} image`,
-    'showing the exact character from image 2',
-    'in the pose and scene layout shown in image 1',
-    "Preserve the character's face, clothing, hair exactly",
-    'White background, isolated, clean',
-  ];
-  if (userPrompt.trim()) promptParts.push(userPrompt.trim());
-  const fullPrompt = promptParts.join('. ') + '.';
+  const fullPrompt = [
+    // Composition first — highest model weight
+    'CRITICAL: Follow the pose and composition of image 1 exactly.',
+    'The subject must be positioned and posed as shown in image 1.',
+    // Identity second
+    'Use image 2 as the identity reference only.',
+    'Reproduce its exact colors, textures, patterns, markings and form.',
+    // Generation instruction
+    `Generate as ${styleText}.`,
+    'White background, clean, isolated subject.',
+    // User prompt last
+    userPrompt?.trim() ? userPrompt.trim() : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return callEdgeFunction('flux-2-pro', {
     prompt: fullPrompt,
     input_images: [sketchDataURL, seedBase64],
+    aspect_ratio: '1:1',
+    output_format: 'png',
+    output_quality: 95,
+  });
+}
+
+export async function flux2RefineWithSeed(
+  acceptedImageDataURL: string,
+  seedBase64: string,
+  style: string,
+  userPrompt: string,
+  _apiKey?: string
+): Promise<GenerateResult> {
+  const stylePrompts: Record<string, string> = {
+    photorealistic: 'product photography, clean white background, studio lighting, sharp focus, 4K',
+    manga: 'manga illustration style, clean linework, black and white, bold outlines',
+    anime: 'anime style, cel shaded, vibrant colors, clean composition',
+    watercolor: 'watercolor painting, soft colors, white background, artistic',
+    oilpainting: 'oil painting, classical style, rich brushwork',
+    sketch: 'refined pencil sketch, clean linework, white background',
+  };
+  const styleText = stylePrompts[style] ?? `${style} style, clean composition`;
+
+  const fullPrompt = [
+    // Image 1 is the accepted result — primary truth
+    'Image 1 is the accepted canonical image and the primary source of truth.',
+    // Image 2 reinforces identity only
+    'Image 2 is the identity reference.',
+    'Preserve every distinctive visual feature of the subject in image 2 exactly:',
+    'its colors, textures, markings, shape and form.',
+    // What to change
+    userPrompt?.trim() ? userPrompt.trim() : '',
+    'Keep the overall composition and style.',
+    'Only change what was explicitly requested.',
+    `Style: ${styleText}.`,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return callEdgeFunction('flux-2-pro', {
+    prompt: fullPrompt,
+    input_images: [acceptedImageDataURL, seedBase64],
     aspect_ratio: '1:1',
     output_format: 'png',
     output_quality: 95,
