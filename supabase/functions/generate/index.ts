@@ -375,49 +375,17 @@ serve(async (req: Request) => {
         .trim()
         .replace(/^\s+/gm, '');
 
-      console.log('Step 2 - GPT Image prompt (detected):', step2Prompt);
-
-      const gptImageRes = await fetch(
-        'https://api.replicate.com/v1/models/openai/gpt-image-2/predictions',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Token ${replicateKey}`,
-            'Content-Type': 'application/json',
-            Prefer: 'wait=60',
-          },
-          body: JSON.stringify({
-            input: {
-              prompt: step2Prompt,
-              input_images: [step1Base64],
-              quality: 'medium',
-              aspect_ratio: '1:1',
-              output_format: 'png',
-              background: 'opaque',
-            },
-          }),
-        }
-      );
-
-      if (!gptImageRes.ok) {
-        console.error('Step 2 GPT Image failed');
-        const finalImageURL = await saveToStorage(step1ImageURL, user.id, adminClient);
-        await adminClient.from('usage').upsert(
-          { user_id: user.id, month: monthKey, generation_count: currentCount + 1, updated_at: new Date().toISOString() },
-          { onConflict: 'user_id,month' }
-        );
-        return new Response(JSON.stringify({ success: true, imageURL: finalImageURL }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const openAIKey = Deno.env.get('OPENAI_API_KEY');
+      if (!openAIKey) {
+        return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), { status: 500, headers: corsHeaders });
       }
 
-      let gptImagePrediction = await gptImageRes.json();
-      if (gptImagePrediction.status !== 'succeeded') {
-        gptImagePrediction = await pollReplicatePrediction(gptImagePrediction.id, replicateKey);
-      }
+      console.log('Step 2 - Direct OpenAI call (detected):', step2Prompt);
 
-      const step2Output = gptImagePrediction.output;
-      const step2ImageURL = Array.isArray(step2Output) ? step2Output[0] : step2Output;
+      const step2ImageURL = await callGPTImage2(step2Prompt, [step1Base64], openAIKey, 'medium');
 
       if (!step2ImageURL) {
+        console.error('Step 2 GPT Image failed');
         const finalImageURL = await saveToStorage(step1ImageURL, user.id, adminClient);
         await adminClient.from('usage').upsert(
           { user_id: user.id, month: monthKey, generation_count: currentCount + 1, updated_at: new Date().toISOString() },
@@ -545,77 +513,17 @@ serve(async (req: Request) => {
         .trim()
         .replace(/^\s+/gm, '');
 
-      console.log('Step 2 - GPT Image prompt:', step2Prompt);
-
-      const gptImageRes = await fetch(
-        'https://api.replicate.com/v1/models/openai/gpt-image-2/predictions',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Token ${replicateKey}`,
-            'Content-Type': 'application/json',
-            Prefer: 'wait=60',
-          },
-          body: JSON.stringify({
-            input: {
-              prompt: step2Prompt,
-              input_images: [step1Base64, seedBase64],
-              quality: 'medium',
-              aspect_ratio: '1:1',
-              output_format: 'png',
-              background: 'opaque',
-            },
-          }),
-        }
-      );
-
-      if (!gptImageRes.ok) {
-        const errText = await gptImageRes.text();
-        console.error('Step 2 GPT Image failed:', errText);
-        console.error('Step 2 failed, using step 1 result');
-        const finalImageURL = await saveToStorage(
-          step1ImageURL,
-          user.id,
-          adminClient
-        );
-
-        await adminClient.from('usage').upsert(
-          {
-            user_id: user.id,
-            month: monthKey,
-            generation_count: currentCount + 1,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id,month' }
-        );
-
-        return new Response(
-          JSON.stringify({ success: true, imageURL: finalImageURL }),
-          {
-            status: 200,
-            headers: {
-              ...corsHeaders,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+      const openAIKey = Deno.env.get('OPENAI_API_KEY');
+      if (!openAIKey) {
+        return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), { status: 500, headers: corsHeaders });
       }
 
-      let gptImagePrediction = await gptImageRes.json();
+      console.log('Step 2 - Direct OpenAI call (seed):', step2Prompt);
 
-      if (gptImagePrediction.status !== 'succeeded') {
-        gptImagePrediction = await pollReplicatePrediction(
-          gptImagePrediction.id,
-          replicateKey
-        );
-      }
-
-      const step2Output = gptImagePrediction.output;
-      const step2ImageURL = Array.isArray(step2Output)
-        ? step2Output[0]
-        : step2Output;
+      const step2ImageURL = await callGPTImage2(step2Prompt, [step1Base64, seedBase64], openAIKey, 'medium');
 
       if (!step2ImageURL) {
+        console.error('Step 2 GPT Image failed, using step 1 result');
         const finalImageURL = await saveToStorage(
           step1ImageURL,
           user.id,
