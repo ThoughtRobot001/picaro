@@ -131,7 +131,11 @@ async function callGPTImage2(
         byteArr[j] = byteChars.charCodeAt(j);
       }
       const blob = new Blob([byteArr], { type: 'image/png' });
-      formData.append('image[]', blob, `image${i}.png`);
+      if (i === 0) {
+        formData.append('image', blob, 'image.png');
+      } else if (i === 1) {
+        formData.append('mask', blob, 'mask.png');
+      }
     }
 
     const response = await fetch(
@@ -312,52 +316,21 @@ serve(async (req: Request) => {
         .trim()
         .replace(/^\s+/gm, '');
 
-      console.log('Step 1 - Kontext prompt (detected):', step1Prompt);
-
-      const step1Res = await fetch(
-        'https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Token ${replicateKey}`,
-            'Content-Type': 'application/json',
-            Prefer: 'wait=60',
-          },
-          body: JSON.stringify({
-            input: {
-              prompt: step1Prompt,
-              input_image: sketchDataURL,
-              aspect_ratio: '1:1',
-              output_format: 'png',
-              output_quality: 95,
-              safety_tolerance: 2,
-            },
-          }),
-        }
-      );
-
-      if (!step1Res.ok) {
-        const err = await step1Res.json();
-        return new Response(JSON.stringify({ error: err.detail || 'Step 1 failed' }), { status: 500, headers: corsHeaders });
+      const openAIKey = Deno.env.get('OPENAI_API_KEY');
+      if (!openAIKey) {
+        return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), { status: 500, headers: corsHeaders });
       }
 
-      let step1Prediction = await step1Res.json();
-      if (step1Prediction.status !== 'succeeded') {
-        step1Prediction = await pollReplicatePrediction(step1Prediction.id, replicateKey);
-      }
+      console.log('Step 1 - OpenAI prompt (detected):', step1Prompt);
 
-      if (step1Prediction.status !== 'succeeded') {
+      const step1ImageURL = await callGPTImage2(step1Prompt, [sketchDataURL], openAIKey, 'medium');
+
+      if (!step1ImageURL) {
         return new Response(JSON.stringify({ error: 'Step 1 generation failed' }), { status: 500, headers: corsHeaders });
       }
 
-      const step1Output = step1Prediction.output;
-      const step1ImageURL = Array.isArray(step1Output) ? step1Output[0] : step1Output;
-      console.log('Step 1 complete:', step1ImageURL);
-
-      const step1ImageRes = await fetch(step1ImageURL);
-      const step1Blob = await step1ImageRes.blob();
-      const step1Buffer = await step1Blob.arrayBuffer();
-      const step1Base64 = arrayBufferToDataUrl(step1Buffer);
+      console.log('Step 1 complete');
+      const step1Base64 = step1ImageURL; // callGPTImage2 returns a data URL
 
       const step2Prompt = `
         This is a ${detectedSubject}.
@@ -375,10 +348,7 @@ serve(async (req: Request) => {
         .trim()
         .replace(/^\s+/gm, '');
 
-      const openAIKey = Deno.env.get('OPENAI_API_KEY');
-      if (!openAIKey) {
-        return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), { status: 500, headers: corsHeaders });
-      }
+
 
       console.log('Step 2 - Direct OpenAI call (detected):', step2Prompt);
 
@@ -435,67 +405,21 @@ serve(async (req: Request) => {
         .trim()
         .replace(/^\s+/gm, '');
 
-      console.log('Step 1 - Kontext prompt:', step1Prompt);
-
-      const step1Res = await fetch(
-        'https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Token ${replicateKey}`,
-            'Content-Type': 'application/json',
-            Prefer: 'wait=60',
-          },
-          body: JSON.stringify({
-            input: {
-              prompt: step1Prompt,
-              input_image: sketchDataURL,
-              aspect_ratio: '1:1',
-              output_format: 'png',
-              output_quality: 95,
-              safety_tolerance: 2,
-            },
-          }),
-        }
-      );
-
-      if (!step1Res.ok) {
-        const err = await step1Res.json();
-        return new Response(
-          JSON.stringify({
-            error: err.detail || 'Step 1 failed',
-          }),
-          { status: 500, headers: corsHeaders }
-        );
+      const openAIKey = Deno.env.get('OPENAI_API_KEY');
+      if (!openAIKey) {
+        return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), { status: 500, headers: corsHeaders });
       }
 
-      let step1Prediction = await step1Res.json();
+      console.log('Step 1 - OpenAI prompt:', step1Prompt);
 
-      if (step1Prediction.status !== 'succeeded') {
-        step1Prediction = await pollReplicatePrediction(
-          step1Prediction.id,
-          replicateKey
-        );
+      const step1ImageURL = await callGPTImage2(step1Prompt, [sketchDataURL], openAIKey, 'medium');
+
+      if (!step1ImageURL) {
+        return new Response(JSON.stringify({ error: 'Step 1 generation failed' }), { status: 500, headers: corsHeaders });
       }
 
-      if (step1Prediction.status !== 'succeeded') {
-        return new Response(
-          JSON.stringify({ error: 'Step 1 generation failed' }),
-          { status: 500, headers: corsHeaders }
-        );
-      }
-
-      const step1Output = step1Prediction.output;
-      const step1ImageURL = Array.isArray(step1Output)
-        ? step1Output[0]
-        : step1Output;
-
-      console.log('Step 1 complete:', step1ImageURL);
-
-      const step1ImageRes = await fetch(step1ImageURL);
-      const step1Blob = await step1ImageRes.blob();
-      const step1Buffer = await step1Blob.arrayBuffer();
-      const step1Base64 = arrayBufferToDataUrl(step1Buffer);
+      console.log('Step 1 complete');
+      const step1Base64 = step1ImageURL;
 
       const step2Prompt = `
         This is a ${detectedSubject}.
@@ -513,10 +437,6 @@ serve(async (req: Request) => {
         .trim()
         .replace(/^\s+/gm, '');
 
-      const openAIKey = Deno.env.get('OPENAI_API_KEY');
-      if (!openAIKey) {
-        return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), { status: 500, headers: corsHeaders });
-      }
 
       console.log('Step 2 - Direct OpenAI call (seed):', step2Prompt);
 
