@@ -6,6 +6,23 @@ export interface ProjectSummary {
   updated_at: string;
 }
 
+function getStoragePathFromPublicUrl(
+  imageUrl: string,
+  bucket: string
+): string | null {
+  try {
+    const url = new URL(imageUrl);
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const markerIndex = url.pathname.indexOf(marker);
+    if (markerIndex === -1) return null;
+
+    const encodedPath = url.pathname.slice(markerIndex + marker.length);
+    return decodeURIComponent(encodedPath);
+  } catch {
+    return null;
+  }
+}
+
 export async function getProjectById(
   userId: string,
   projectId: string
@@ -267,6 +284,30 @@ export async function loadCharacterSeeds(
 }
 
 export async function deleteCharacterSeed(seedId: string): Promise<void> {
+  const { data: seed, error: loadError } = await supabase
+    .from('character_seeds')
+    .select('image_url')
+    .eq('id', seedId)
+    .maybeSingle();
+
+  if (loadError) {
+    console.error('Error loading seed for deletion:', loadError);
+  }
+
+  const storagePath = seed?.image_url
+    ? getStoragePathFromPublicUrl(seed.image_url, 'picaro-images')
+    : null;
+
+  if (storagePath) {
+    const { error: storageError } = await supabase.storage
+      .from('picaro-images')
+      .remove([storagePath]);
+
+    if (storageError) {
+      console.error('Error deleting seed image from storage:', storageError);
+    }
+  }
+
   const { error } = await supabase
     .from('character_seeds')
     .delete()
@@ -290,16 +331,7 @@ export async function saveIteration(
     isActive: boolean;
   }
 ): Promise<void> {
-  if (iteration.isActive) {
-    await supabase
-      .from('iterations')
-      .update({ is_active: false })
-      .eq('user_id', userId)
-      .eq('project_id', projectId)
-      .eq('page_number', pageNumber);
-  }
-
-  await supabase.from('iterations').upsert({
+  const { error: upsertError } = await supabase.from('iterations').upsert({
     id: iteration.id,
     user_id: userId,
     project_id: projectId,
@@ -310,6 +342,27 @@ export async function saveIteration(
     is_refinement: iteration.isRefinement,
     is_active: iteration.isActive,
   });
+
+  if (upsertError) {
+    console.error('Error saving iteration:', upsertError);
+    throw upsertError;
+  }
+
+  if (!iteration.isActive) return;
+
+  const { error: deactivateError } = await supabase
+    .from('iterations')
+    .update({ is_active: false })
+    .eq('user_id', userId)
+    .eq('project_id', projectId)
+    .eq('page_number', pageNumber)
+    .neq('id', iteration.id)
+    .eq('is_active', true);
+
+  if (deactivateError) {
+    console.error('Error deactivating sibling iterations:', deactivateError);
+    throw deactivateError;
+  }
 }
 
 export async function loadIterations(

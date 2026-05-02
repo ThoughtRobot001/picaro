@@ -2,11 +2,16 @@ import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
 import { useAuth } from './useAuth';
 
+const UNLIMITED_ACCOUNT_EMAILS = new Set([
+  'thoughtrobot001@gmail.com',
+]);
+
 export function useUsage() {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
   const [limit] = useState(10);
   const [loading, setLoading] = useState(true);
+  const hasUnlimitedAccess = !!user?.email && UNLIMITED_ACCOUNT_EMAILS.has(user.email);
 
   const monthKey = (() => {
     const now = new Date();
@@ -41,5 +46,11 @@ export function useUsage() {
 
   const refresh = () => void fetchUsage();
 
-  return { count, limit, loading, refresh };
+  return {
+    count,
+    limit: hasUnlimitedAccess ? null : limit,
+    loading,
+    refresh,
+    hasUnlimitedAccess,
+  };
 }

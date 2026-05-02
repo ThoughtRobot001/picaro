@@ -17,32 +17,41 @@ export interface GenerateResult {
   message?: string;
 }
 
-const STYLE_INSTRUCTIONS: Record<string, {
-  instruction: string;
-  quality: string;
-}> = {
+const STYLE_INSTRUCTIONS: Record<
+  string,
+  {
+    instruction: string;
+    quality: string;
+  }
+> = {
   photorealistic: {
     instruction: 'Transform this hand-drawn sketch into a photorealistic product photograph',
-    quality: 'studio lighting, clean white background, isolated object, sharp focus, 4K, professional product photography',
+    quality:
+      'studio lighting, clean white background, isolated object, sharp focus, 4K, professional product photography',
   },
   manga: {
     instruction: 'Transform this hand-drawn sketch into a manga illustration',
-    quality: 'clean black ink linework, white background, manga style, bold outlines, Japanese comic art',
+    quality:
+      'clean black ink linework, white background, manga style, bold outlines, Japanese comic art',
   },
   anime: {
     instruction: 'Transform this hand-drawn sketch into an anime style illustration',
-    quality: 'cel shaded, vibrant colors, clean white background, anime art style, smooth linework',
+    quality:
+      'cel shaded, vibrant colors, clean white background, anime art style, smooth linework',
   },
   watercolor: {
     instruction: 'Transform this hand-drawn sketch into a watercolor painting',
-    quality: 'soft watercolor washes, white paper background, delicate brushwork, artistic',
+    quality:
+      'soft watercolor washes, white paper background, delicate brushwork, artistic',
   },
   oilpainting: {
     instruction: 'Transform this hand-drawn sketch into an oil painting',
-    quality: 'rich oil paint texture, visible brushstrokes, classical painting style, white background',
+    quality:
+      'rich oil paint texture, visible brushstrokes, classical painting style, white background',
   },
   sketch: {
-    instruction: 'Transform this rough sketch into a refined pencil sketch illustration',
+    instruction:
+      'Transform this rough sketch into a refined pencil sketch illustration',
     quality: 'clean pencil lines, white paper background, professional illustration',
   },
 };
@@ -245,6 +254,41 @@ export async function buildRefinementPrompt(
   return parts.filter(Boolean).join('. ') + '.';
 }
 
+export async function detectSubject(sketchDataURL: string): Promise<any> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/detect-subject`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
+    },
+    body: JSON.stringify({ sketchDataURL })
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to detect subject');
+  }
+  
+  return response.json();
+}
+
+export async function generateTwoStep(
+  options: GenerateOptions,
+  detection: any
+): Promise<GenerateResult> {
+  const { sketchDataURL, prompt, style } = options;
+  
+  // Only called when no character seed is used, so it behaves as the base guest/new generation
+  return callEdgeFunction('two-step-detected', {
+    sketchDataURL,
+    detection,
+    styleText: STYLE_INSTRUCTIONS[style]?.quality ?? '',
+    userPrompt: prompt
+  });
+}
+
 export async function generateFromSketch(
   options: GenerateOptions,
   _apiKey?: string
@@ -269,40 +313,31 @@ export async function flux2GenerateWithSeed(
   seedBase64: string,
   style: string,
   userPrompt: string,
+  detection?: any,
   _apiKey?: string
 ): Promise<GenerateResult> {
   const stylePrompts: Record<string, string> = {
-    photorealistic: 'product photography, clean white background, studio lighting, sharp focus, 4K',
-    manga: 'manga illustration style, clean linework, black and white, bold outlines',
-    anime: 'anime style, cel shaded, vibrant colors, clean composition',
+    photorealistic:
+      'product photography, clean white background, studio lighting, sharp focus, 4K',
+    anime: 'anime style, cel shaded, vibrant colors, clean white background',
+    manga: 'manga illustration, clean linework, black and white, bold outlines',
     watercolor: 'watercolor painting, soft colors, white background, artistic',
-    oilpainting: 'oil painting, classical style, rich brushwork',
-    sketch: 'refined pencil sketch, clean linework, white background',
+    oilpainting:
+      'oil painting, classical style, rich brushwork, white background',
+    sketch: 'refined pencil sketch, clean linework, white paper',
   };
-  const styleText = stylePrompts[style] ?? `${style} style, white background, clean`;
 
-  const fullPrompt = [
-    // Composition first — highest model weight
-    'CRITICAL: Follow the pose and composition of image 1 exactly.',
-    'The subject must be positioned and posed as shown in image 1.',
-    // Identity second
-    'Use image 2 as the identity reference only.',
-    'Reproduce its exact colors, textures, patterns, markings and form.',
-    // Generation instruction
-    `Generate as ${styleText}.`,
-    'White background, clean, isolated subject.',
-    // User prompt last
-    userPrompt?.trim() ? userPrompt.trim() : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const styleText =
+    stylePrompts[style] ?? `${style} style, white background, clean`;
 
-  return callEdgeFunction('flux-2-pro', {
-    prompt: fullPrompt,
-    input_images: [sketchDataURL, seedBase64],
-    aspect_ratio: '1:1',
-    output_format: 'png',
-    output_quality: 95,
+  console.log('Two-step seed generation starting...');
+
+  return callEdgeFunction('two-step-seed', {
+    sketchDataURL,
+    seedBase64,
+    detection: detection ?? null,
+    styleText,
+    userPrompt: userPrompt?.trim() || '',
   });
 }
 
@@ -314,7 +349,8 @@ export async function flux2RefineWithSeed(
   _apiKey?: string
 ): Promise<GenerateResult> {
   const stylePrompts: Record<string, string> = {
-    photorealistic: 'product photography, clean white background, studio lighting, sharp focus, 4K',
+    photorealistic:
+      'product photography, clean white background, studio lighting, sharp focus, 4K',
     manga: 'manga illustration style, clean linework, black and white, bold outlines',
     anime: 'anime style, cel shaded, vibrant colors, clean composition',
     watercolor: 'watercolor painting, soft colors, white background, artistic',
@@ -324,13 +360,10 @@ export async function flux2RefineWithSeed(
   const styleText = stylePrompts[style] ?? `${style} style, clean composition`;
 
   const fullPrompt = [
-    // Image 1 is the accepted result — primary truth
     'Image 1 is the accepted canonical image and the primary source of truth.',
-    // Image 2 reinforces identity only
     'Image 2 is the identity reference.',
     'Preserve every distinctive visual feature of the subject in image 2 exactly:',
     'its colors, textures, markings, shape and form.',
-    // What to change
     userPrompt?.trim() ? userPrompt.trim() : '',
     'Keep the overall composition and style.',
     'Only change what was explicitly requested.',

@@ -319,7 +319,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     canUndo, canRedo, triggerUndo, triggerRedo 
   } = useStore();
   const { user, signOut } = useAuth();
-  const { count, limit } = useUsage();
+  const { count, limit, hasUnlimitedAccess } = useUsage();
 
   useEffect(() => {
     setTitle(projectTitle || 'Untitled Art');
@@ -442,19 +442,23 @@ export const TopBar: React.FC<TopBarProps> = ({
             {user && (
               <div className="flex items-center gap-1.5 rounded-md border border-white/[0.06] bg-white/[0.04] px-2 py-1">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">
-                  {count}/{limit}
+                  {hasUnlimitedAccess ? 'Unlimited' : `${count}/${limit}`}
                 </span>
                 <div className="h-1.5 w-12 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
-                      width: `${Math.min((count / limit) * 100, 100)}%`,
+                      width: hasUnlimitedAccess
+                        ? '100%'
+                        : `${Math.min((count / (limit ?? 1)) * 100, 100)}%`,
                       background:
-                        count >= limit
-                          ? '#ef4444'
-                          : count >= limit * 0.8
-                            ? '#f59e0b'
-                            : '#12b76a',
+                        hasUnlimitedAccess
+                          ? '#12b76a'
+                          : count >= (limit ?? 0)
+                            ? '#ef4444'
+                            : count >= (limit ?? 0) * 0.8
+                              ? '#f59e0b'
+                              : '#12b76a',
                     }}
                   />
                 </div>

@@ -39,7 +39,6 @@ export default function PicaroApp() {
     selectedStyle,
     setSelectedStyle,
     setGeneratedImageURL,
-    generatedImageURL,
     currentPageId,
     pages,
     addPage,
@@ -438,7 +437,7 @@ export default function PicaroApp() {
           <div className="flex min-h-0 flex-1 flex-row gap-3 p-3">
             <PicaroCanvas onExport={handleCanvasExport} />
             <OutputPanel
-              generatedImageURL={currentPage?.aiResult ?? generatedImageURL}
+              generatedImageURL={currentPage?.aiResult ?? null}
               selectedStyle={selectedStyle}
               onStyleChange={setSelectedStyle}
             />
@@ -472,7 +471,7 @@ export default function PicaroApp() {
                 getCanvasDataURL={getCanvasDataURL}
                 onGenerated={handleGenerated}
                 selectedStyle={selectedStyle}
-                currentGeneratedImageURL={currentPage?.aiResult ?? generatedImageURL}
+                currentGeneratedImageURL={currentPage?.aiResult ?? null}
                 currentProjectId={currentProjectId}
               />
             </motion.div>

@@ -93,6 +93,7 @@ export function useDatabase() {
   const { user } = useAuth();
   const projectIdRef = useRef<string | null>(null);
   const hasLoadedRef = useRef<string | null>(null);
+  const workspaceLoadIdRef = useRef(0);
   const resetStore = useStore((state) => state.resetStore);
   const setProjectSeedIds = useStore((state) => state.setProjectSeedIds);
   const projectSeedIds = useStore((state) => state.projectSeedIds);
@@ -127,20 +128,26 @@ export function useDatabase() {
   );
 
   const loadProjectWorkspace = useCallback(
-    async (userId: string, project: ProjectSummary) => {
-      projectIdRef.current = project.id;
-      setCurrentProjectTitle(project.title || DEFAULT_PROJECT_TITLE);
-      persistCurrentProjectId(userId, project.id);
+    async (
+      userId: string,
+      project: ProjectSummary,
+      workspaceLoadId: number
+    ) => {
       const storedProjectSeeds = localStorage.getItem(
         getProjectSeedsKey(userId, project.id)
       );
       const parsedProjectSeeds = storedProjectSeeds
         ? (JSON.parse(storedProjectSeeds) as string[])
         : [];
-      setProjectSeedIds(parsedProjectSeeds);
-      useStore.getState().setActiveCharacterSeed(null);
 
       const dbPages = await loadPages(project.id);
+      if (workspaceLoadId !== workspaceLoadIdRef.current) return;
+
+      projectIdRef.current = project.id;
+      setCurrentProjectTitle(project.title || DEFAULT_PROJECT_TITLE);
+      persistCurrentProjectId(userId, project.id);
+      setProjectSeedIds(parsedProjectSeeds);
+      useStore.getState().setActiveCharacterSeed(null);
       applyPagesToStore(dbPages);
       await refreshProjects(userId, project.id);
     },
@@ -149,6 +156,7 @@ export function useDatabase() {
 
   const loadUserData = useCallback(
     async (userId: string) => {
+      const workspaceLoadId = ++workspaceLoadIdRef.current;
       const savedProjectId = localStorage.getItem(getLastProjectKey(userId));
       const project = await getOrCreateProject(
         userId,
@@ -157,9 +165,11 @@ export function useDatabase() {
       );
       if (!project) return;
 
-      await loadProjectWorkspace(userId, project);
+      await loadProjectWorkspace(userId, project, workspaceLoadId);
+      if (workspaceLoadId !== workspaceLoadIdRef.current) return;
 
       const dbSeeds = await loadCharacterSeeds(userId);
+      if (workspaceLoadId !== workspaceLoadIdRef.current) return;
       applySeedsToStore(dbSeeds);
     },
     [loadProjectWorkspace]
@@ -167,6 +177,7 @@ export function useDatabase() {
 
   useEffect(() => {
     if (!user) {
+      workspaceLoadIdRef.current += 1;
       projectIdRef.current = null;
       hasLoadedRef.current = null;
       setProjects([]);
@@ -225,6 +236,7 @@ export function useDatabase() {
 
   const createNewProject = useCallback(async (title?: string) => {
     if (!user) return;
+    const workspaceLoadId = ++workspaceLoadIdRef.current;
 
     const project = await createProject(
       user.id,
@@ -232,18 +244,19 @@ export function useDatabase() {
     );
     if (!project) return;
 
-    await loadProjectWorkspace(user.id, project);
+    await loadProjectWorkspace(user.id, project, workspaceLoadId);
   }, [loadProjectWorkspace, user]);
 
   const switchProject = useCallback(
     async (projectId: string) => {
       if (!user || !projectId) return;
       if (projectIdRef.current === projectId) return;
+      const workspaceLoadId = ++workspaceLoadIdRef.current;
 
       const project = projects.find((entry) => entry.id === projectId);
       if (!project) return;
 
-      await loadProjectWorkspace(user.id, project);
+      await loadProjectWorkspace(user.id, project, workspaceLoadId);
     },
     [loadProjectWorkspace, projects, user]
   );
@@ -265,13 +278,19 @@ export function useDatabase() {
       await deleteProjectRecord(projectId);
       
       const remainingProjects = projects.filter(p => p.id !== projectId);
+      if (projectIdRef.current !== projectId) {
+        await refreshProjects(user.id, projectIdRef.current);
+        return;
+      }
+
       if (remainingProjects.length > 0) {
-        await loadProjectWorkspace(user.id, remainingProjects[0]);
+        const workspaceLoadId = ++workspaceLoadIdRef.current;
+        await loadProjectWorkspace(user.id, remainingProjects[0], workspaceLoadId);
       } else {
         await createNewProject('Untitled Art');
       }
     },
-    [user, projects, loadProjectWorkspace, createNewProject]
+    [user, projects, loadProjectWorkspace, createNewProject, refreshProjects]
   );
 
   const saveSeedToDatabase = useCallback(

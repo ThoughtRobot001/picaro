@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Plus, Trash2, Upload, Check, X, ChevronDown, ChevronRight, MoreVertical } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ConfirmModal } from '../ui/ConfirmModal';
@@ -59,6 +59,29 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [seedToDelete, setSeedToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleOpenSeedLibrary = () => {
+      if (characterSeeds.length > 0) {
+        setIsLibraryOpen(true);
+        return;
+      }
+
+      fileInputRef.current?.click();
+    };
+
+    window.addEventListener(
+      'picaro:open-seed-library',
+      handleOpenSeedLibrary
+    );
+
+    return () => {
+      window.removeEventListener(
+        'picaro:open-seed-library',
+        handleOpenSeedLibrary
+      );
+    };
+  }, [characterSeeds.length]);
 
   const atLimit = characterSeeds.length >= maxSeeds;
   const usedInProjectSeeds = characterSeeds.filter((seed) =>
@@ -193,6 +216,11 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
         </span>
       </div>
 
+      <p className="text-[11px] leading-5 text-white/40">
+        Add a seed reference image to lock subject identity and get more
+        accurate results across generations and refinements.
+      </p>
+
       {error && (
         <div className="text-[11px] text-red-400 bg-red-400/10 rounded-md px-2 py-1.5">
           {error}
@@ -263,12 +291,12 @@ export const CharacterSeedPanel: React.FC<CharacterSeedPanelProps> = ({
             }`}
           >
             <span className="text-lg leading-none mb-1 opacity-80">✦</span>
-            <span className="tracking-wide">None</span>
+            <span className="tracking-wide">Freeform</span>
           </button>
 
           {usedInProjectSeeds.length === 0 && (
             <div className="col-span-2 flex min-h-[88px] items-center justify-center rounded-[10px] border border-dashed border-white/[0.08] bg-white/[0.01] px-3 text-center text-[10px] text-white/30">
-              No seeds in use yet.
+              Add a seed to keep the same subject identity across generations.
             </div>
           )}
 
