@@ -96,11 +96,11 @@ async function callGPTImage2(
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'dall-e-3',
+            model: 'gpt-image-1',
             prompt,
             n: 1,
             size: '1024x1024',
-            quality: quality === 'high' ? 'hd' : 'standard',
+            quality,
             response_format: 'b64_json',
           }),
         }
@@ -115,11 +115,12 @@ async function callGPTImage2(
     }
 
     const formData = new FormData();
-    formData.append('model', 'dall-e-2');
+    formData.append('model', 'gpt-image-1');
     formData.append('prompt', prompt);
     formData.append('n', '1');
     formData.append('size', '1024x1024');
     formData.append('response_format', 'b64_json');
+    formData.append('quality', quality);
 
     for (let i = 0; i < inputImages.length; i++) {
       const dataURL = inputImages[i];
