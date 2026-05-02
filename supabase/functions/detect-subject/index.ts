@@ -24,40 +24,18 @@ serve(async (req) => {
     }
 
     const prompt = `You are analyzing a rough sketch to help
-an AI image generator understand the 
-composition.
+an AI image generator understand the composition.
 
-Look at this sketch carefully and respond
-with ONLY a JSON object. No extra text.
+Look at this sketch carefully and respond with ONLY a JSON object. No extra text.
 
 Rules:
-- ONLY describe what you can clearly see
-- Do NOT guess specific species or brands
-- Do NOT assume famous versions of things
-- Use generic descriptions
-- If unsure, describe the SHAPE not the thing
-
-BAD example: "bald eagle" (too specific)
-GOOD example: "large bird of prey with 
-  wings spread wide"
-
-BAD example: "Ferrari sports car" 
-GOOD example: "low sports car, side view"
-
-BAD example: "samurai warrior"
-GOOD example: "human figure in wide stance
-  holding a long weapon"
+- ONLY describe what you can clearly see.
+- Be concise but specific about the main subject and its features.
 
 {
-  "shape_description": "describe the overall shape and silhouette only",
-  "visible_features": ["list only clearly visible details"],
-  "pose": "describe position/orientation",
-  "category": "animal/human/vehicle/object/creature/other",
-  "safe_prompt": "a [category] with [shape_description], [pose], photorealistic, white background, highly detailed"
-}
-
-Be conservative. Less assumptions = 
-better results.`;
+  "detected_subject": "The primary thing in the sketch (e.g., bird, dragon, robot, character, vehicle, etc.)",
+  "detected_attributes": "Important features, body parts, posture details, items, expressions, or other relevant attributes detected by your model. Example: 'wings spread, diving downward, claws extended'"
+}`;
 
     const response = await fetch(
       'https://api.replicate.com/v1/models/anthropic/claude-opus-4.6/predictions',
@@ -117,11 +95,8 @@ better results.`;
       console.error('Failed to parse Claude output as JSON:', cleanJson);
       return new Response(
         JSON.stringify({
-          shape_description: 'shape drawn in the sketch',
-          visible_features: [],
-          pose: 'as drawn in sketch',
-          category: 'other',
-          safe_prompt: 'a shape with features as drawn in the sketch, photorealistic, white background, highly detailed',
+          detected_subject: 'subject drawn in the sketch',
+          detected_attributes: 'features as drawn in the sketch',
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

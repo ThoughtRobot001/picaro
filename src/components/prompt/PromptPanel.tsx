@@ -48,11 +48,8 @@ interface Iteration {
 }
 
 interface DetectionResult {
-  shape_description: string;
-  visible_features: string[];
-  pose: string;
-  category: string;
-  safe_prompt: string;
+  detected_subject: string;
+  detected_attributes: string;
 }
 
 const SEED_HINT_DISMISSED_KEY = 'picaro:seed-hint-dismissed';
@@ -336,7 +333,7 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
       const detection = await detectSubject(canvasURL);
       detectedCanvasRef.current = canvasURL;
       setDetectionResult(detection);
-      setManualSubject(detection?.shape_description ?? '');
+      setManualSubject(detection?.detected_subject ?? '');
     } catch (err) {
       setErrorMsg(
         err instanceof Error
@@ -360,12 +357,9 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
 
     const correctedDetection: DetectionResult = {
       ...(detectionResult ?? {
-        visible_features: [],
-        pose: 'as drawn in the sketch',
-        category: 'other',
-        safe_prompt: 'a shape with features as drawn in the sketch',
+        detected_attributes: 'as drawn in the sketch',
       }),
-      shape_description: subject,
+      detected_subject: subject,
     };
 
     setDetectionResult(correctedDetection);
@@ -452,10 +446,10 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[12px] font-medium leading-5 text-sky-50">
-                  Detected: {detectionResult?.shape_description ?? 'Subject'}
+                  Detected: {detectionResult?.detected_subject ?? 'Subject'}
                 </p>
                 <p className="mt-1 text-[11px] leading-4 text-sky-100/70">
-                  {detectionResult?.pose ?? 'As drawn in the sketch'}
+                  {detectionResult?.detected_attributes ?? 'As drawn in the sketch'}
                 </p>
 
                 {isCorrectingSubject ? (
@@ -602,9 +596,9 @@ export const PromptPanel: React.FC<PromptPanelProps> = ({
               >
                 <Loader2 size={10} className="animate-spin text-[#3b82f6]" />
                 <span>{step}</span>
-                {i === 0 && detectionResult?.shape_description && (
+                {i === 0 && detectionResult?.detected_subject && (
                   <span className="text-sky-300">
-                    Detected: {detectionResult.shape_description}
+                    Detected: {detectionResult.detected_subject}
                   </span>
                 )}
               </div>

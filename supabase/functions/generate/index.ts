@@ -290,23 +290,27 @@ serve(async (req: Request) => {
     }
 
     if (model === 'two-step-detected') {
-      const { sketchDataURL, detection, userPrompt } = input;
+      const { sketchDataURL, detection, styleText, userPrompt } = input;
+      const detectedSubject = detection?.detected_subject || 'subject';
+      const detectedAttributes = detection?.detected_attributes || 'as drawn in the sketch';
 
       const step1Prompt = `
-        ${detection.safe_prompt}
-        Visible features: ${(detection.visible_features || []).join(', ')}.
+        Use the uploaded sketch strictly as a pose and silhouette constraint.
+        The subject is: ${detectedSubject}.
+        Key characteristics: ${detectedAttributes}.
 
-        CRITICAL REQUIREMENTS:
-        - Preserve exact pose and structure from the input sketch precisely
-        - Photorealistic render
-        - NOT a toy, figurine, or sculpture
-        - NOT plastic, smooth, or sculpted
-        - Real ${detection.shape_description} with natural textures and anatomy
-        - Natural studio lighting
-        - Clean white background
-        - High quality, detailed
+        Transform this sketch into clean, clear, and anatomically correct line art while preserving the exact pose, orientation, proportions, and overall structure.
+        Do not rotate, flip, or change the perspective.
+        Do not replace the pose with a more standard, generic, or idealized version.
+        Enhance only the clarity, anatomy/structure, and line quality.
+        Preserve the original gesture, energy, and intent.
+        Keep all elements in the same relative positions as in the sketch.
+        Output as clean, smooth vector line art with minimal black outlines on a white background.
+        No shading, no color, no extra details, no stylistic changes.
         ${userPrompt ? `\nUser Request: ${userPrompt}` : ''}
-      `.trim();
+      `
+        .trim()
+        .replace(/^\s+/gm, '');
 
       console.log('Step 1 - Kontext prompt (detected):', step1Prompt);
 
@@ -356,23 +360,20 @@ serve(async (req: Request) => {
       const step1Base64 = arrayBufferToDataUrl(step1Buffer);
 
       const step2Prompt = `
-        This is a ${detection.shape_description}.
+        This is a ${detectedSubject}.
 
-        Enhance into stunning photorealism:
-        - Natural textures (feathers/fur/scales/skin)
-        - Cinematic lighting and shadows
-        - Fine anatomical detail
-        - Professional photography quality
+        Enhance the line art to the following style:
+        ${styleText || 'Photorealistic, highly detailed'}
 
         Keep exactly:
         - Same pose and body position
         - Same camera angle
         - Same composition and framing
 
-        White background.
-        National Geographic photo quality.
         ${userPrompt ? `\nUser Request: ${userPrompt}` : ''}
-      `.trim();
+      `
+        .trim()
+        .replace(/^\s+/gm, '');
 
       console.log('Step 2 - GPT Image prompt (detected):', step2Prompt);
 
@@ -445,27 +446,26 @@ serve(async (req: Request) => {
         userPrompt,
       } = input;
 
-      const detectedSubject = detection?.shape_description || 'shape';
-      const detectedSafePrompt = detection?.safe_prompt || 'a shape';
-      const detectedFeatures = (detection?.visible_features || []).join(', ');
+      const detectedSubject = detection?.detected_subject || 'subject';
+      const detectedAttributes = detection?.detected_attributes || 'as drawn in the sketch';
 
       const step1Prompt = `
-        ${detectedSafePrompt}
-        Visible features: ${detectedFeatures}
+        Use the uploaded sketch strictly as a pose and silhouette constraint.
+        The subject is: ${detectedSubject}.
+        Key characteristics: ${detectedAttributes}.
 
-        CRITICAL REQUIREMENTS:
-        - Preserve exact pose and structure from the input sketch precisely
-        - Photorealistic render
-        - NOT a toy, figurine, or sculpture
-        - NOT plastic, smooth, or sculpted
-        - Real ${detectedSubject} with natural textures and anatomy
-        - Natural studio lighting
-        - Clean white background
-        - High quality, detailed
+        Transform this sketch into clean, clear, and anatomically correct line art while preserving the exact pose, orientation, proportions, and overall structure.
+        Do not rotate, flip, or change the perspective.
+        Do not replace the pose with a more standard, generic, or idealized version.
+        Enhance only the clarity, anatomy/structure, and line quality.
+        Preserve the original gesture, energy, and intent.
+        Keep all elements in the same relative positions as in the sketch.
+        Output as clean, smooth vector line art with minimal black outlines on a white background.
+        No shading, no color, no extra details, no stylistic changes.
         ${userPrompt ? `User Request: ${userPrompt}` : ''}
       `
         .trim()
-        .replace(/\s+/g, ' ');
+        .replace(/^\s+/gm, '');
 
       console.log('Step 1 - Kontext prompt:', step1Prompt);
 
@@ -532,23 +532,18 @@ serve(async (req: Request) => {
       const step2Prompt = `
         This is a ${detectedSubject}.
 
-        Enhance into stunning photorealism:
-        - Natural textures (feathers/fur/scales/skin)
-        - Cinematic lighting and shadows
-        - Fine anatomical detail
-        - Professional photography quality
+        Enhance the line art to the following style:
+        ${styleText || 'Photorealistic, highly detailed'}
 
         Keep exactly:
         - Same pose and body position
         - Same camera angle
         - Same composition and framing
 
-        White background.
-        National Geographic photo quality.
         ${userPrompt ? `User Request: ${userPrompt}` : ''}
       `
         .trim()
-        .replace(/\s+/g, ' ');
+        .replace(/^\s+/gm, '');
 
       console.log('Step 2 - GPT Image prompt:', step2Prompt);
 
