@@ -96,7 +96,7 @@ async function callGPTImage2(
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-image-1',
+            model: 'gpt-image-2',
             prompt,
             n: 1,
             size: '1024x1024',
@@ -115,7 +115,7 @@ async function callGPTImage2(
     }
 
     const formData = new FormData();
-    formData.append('model', 'gpt-image-1');
+    formData.append('model', 'gpt-image-2');
     formData.append('prompt', prompt);
     formData.append('n', '1');
     formData.append('size', '1024x1024');
